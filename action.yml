@@ -78,14 +78,24 @@ runs:
         cmd /c '".\ResourceHacker.exe" -open ".\game.rc" -save ".\${{ inputs.product-name }}.res" -action compile'
 
         cmd /c copy /b .\love-11.4-win32\love.exe + ${{ inputs.love-package }} .\love-11.4-win32\${{ inputs.product-name }}.exe
-        del .\love-11.4-win32\love.exe .\love-11.4-win32\lovec.exe .\love-11.4-win32\game.ico .\love-11.4-win32\love.ico .\love-11.4-win32\changes.txt .\love-11.4-win32\readme.txt
+        del .\love-11.4-win32\love.exe
+        del .\love-11.4-win32\lovec.exe
+        del .\love-11.4-win32\game.ico
+        del .\love-11.4-win32\love.ico
+        del .\love-11.4-win32\changes.txt
+        del .\love-11.4-win32\readme.txt
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
         7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-11.4-win32/*
 
         cmd /c copy /b .\love-11.4-win64\love.exe + ${{ inputs.love-package }} .\love-11.4-win64\${{ inputs.product-name }}.exe
-        del .\love-11.4-win64\love.exe .\love-11.4-win64\lovec.exe .\love-11.4-win64\game.ico .\love-11.4-win64\love.ico .\love-11.4-win64\changes.txt .\love-11.4-win64\readme.txt
+        del .\love-11.4-win64\love.exe
+        del .\love-11.4-win64\lovec.exe
+        del .\love-11.4-win64\game.ico
+        del .\love-11.4-win64\love.ico
+        del .\love-11.4-win64\changes.txt
+        del .\love-11.4-win64\readme.txt
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
