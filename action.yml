@@ -67,8 +67,8 @@ runs:
         with open("${{ inputs.rc-path }}", "r", encoding="utf8") as file:
           data = file.read()
           data = data\
-            .replace("@FileVersion", FileVersion)\
-            .replace("@Version", Version)
+            .replace("@Version", version_string)\
+            .replace("@FileVersion", file_version)
         with open("./game.rc", "w+", encoding="utf8") as file:
           file.write(data)
     - name: Pack product folders
