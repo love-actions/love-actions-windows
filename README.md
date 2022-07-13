@@ -18,7 +18,9 @@ See related actions below:
 
 [Love actions for Linux](https://github.com/marketplace/actions/love-actions-for-linux)
 
-[Love actions for macOS](https://github.com/marketplace/actions/love-actions-for-macos)
+[Love actions for macOS portable](https://github.com/marketplace/actions/love-actions-for-macos-portable)
+
+[Love actions for macOS AppStore](https://github.com/marketplace/actions/love-actions-for-macos-appstore)
 
 ## Quick example
 
