@@ -53,14 +53,14 @@ runs:
     - name: Create directories
       shell: bash
       run: |
-        mkdir -p ${{ runner.temp }}/Windows/
+        mkdir -p ./love-actions-windows/
         mkdir -p ${{ inputs.output-folder }}
     - name: Download love and ResourceHacker
       env:
         TEMP_PATH: ./temp.zip
       shell: bash
       run: |
-        cd ${{ runner.temp }}/Windows/
+        cd ./love-actions-windows/
 
         curl -L --retry 5 https://github.com/love2d/love/releases/download/11.4/love-11.4-win32.zip -o ${{ env.TEMP_PATH }}
         7z x ${{ env.TEMP_PATH }} -o./
@@ -83,15 +83,15 @@ runs:
           data = data\
             .replace("@Version", version_string)\
             .replace("@FileVersion", file_version)
-        with open("${{ runner.temp }}/Windows/game.rc", "w+", encoding="utf8") as file:
+        with open("./love-actions-windows/game.rc", "w+", encoding="utf8") as file:
           file.write(data)
     - name: Pack product folders
       shell: pwsh
       run: |
-        mv ${{ inputs.love-package }} ${{ runner.temp }}\Windows\game.love
-        cp ${{ inputs.icon-path }} ${{ runner.temp }}\Windows\icon.ico
+        mv ${{ inputs.love-package }} ./love-actions-windows/game.love
+        cp ${{ inputs.icon-path }} ./love-actions-windows/icon.ico
 
-        cd ${{ runner.temp }}\Windows\
+        cd ./love-actions-windows/
         cmd /c '".\ResourceHacker.exe" -open ".\game.rc" -save ".\${{ inputs.product-name }}.res" -action compile'
 
         cmd /c copy /b .\love-11.4-win32\love.exe + .\game.love .\love-11.4-win32\${{ inputs.product-name }}.exe
@@ -125,4 +125,4 @@ runs:
     - name: Cleanup
       shell: bash
       run: |
-        rm -rf ${{ runner.temp }}/Windows/
+        rm -rf ./love-actions-windows/
