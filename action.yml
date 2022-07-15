@@ -85,13 +85,14 @@ runs:
             .replace("@FileVersion", file_version)
         with open("./love-actions-windows/game.rc", "w+", encoding="utf8") as file:
           file.write(data)
-    - name: Pack product folders
+    - name: Assemble product folders
       shell: pwsh
       run: |
         mv ${{ inputs.love-package }} ./love-actions-windows/game.love
         cp ${{ inputs.icon-path }} ./love-actions-windows/icon.ico
-
+        
         cd ./love-actions-windows/
+
         cmd /c '".\ResourceHacker.exe" -open ".\game.rc" -save ".\${{ inputs.product-name }}.res" -action compile'
 
         cmd /c copy /b .\love-11.4-win32\love.exe + .\game.love .\love-11.4-win32\${{ inputs.product-name }}.exe
@@ -104,7 +105,6 @@ runs:
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
-        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-11.4-win32/*
 
         cmd /c copy /b .\love-11.4-win64\love.exe + .\game.love .\love-11.4-win64\${{ inputs.product-name }}.exe
         del .\love-11.4-win64\love.exe
@@ -116,11 +116,12 @@ runs:
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
-        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-11.4-win64/*
     - name: Gather packages in output folder
       id: gather-packages
       shell: bash
       run: |
+        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/love-11.4-win32/*
+        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/love-11.4-win64/*
         echo ::set-output name=package-paths::$(ls -d ${{ inputs.output-folder }}/*)
     - name: Cleanup
       shell: bash
