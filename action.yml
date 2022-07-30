@@ -21,6 +21,18 @@ inputs:
       Would be used to assemble the executable
     required: false
     default: "./game.love"
+  extra-assets-x86:
+    description: |
+      List of folder & file paths to be added to x86 product folder
+      Don't need global quotes, separated by spaces
+      Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
+    required: false
+  extra-assets-x64:
+    description: |
+      List of folder & file paths to be added to x64 product folder
+      Don't need global quotes, separated by spaces
+      Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
+    required: false
   product-name:
     description: |
       Base name of the package
@@ -116,6 +128,16 @@ runs:
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+    - name: Add extra assets for x86
+      if: "${{ inputs.extra-assets-x86 != '' }}"
+      shell: bash
+      run: |
+        cp -r -f ${{ inputs.extra-assets-x86 }} ./love-actions-windows/love-11.4-win32/
+    - name: Add extra assets for x64
+      if: "${{ inputs.extra-assets-x64 != '' }}"
+      shell: bash
+      run: |
+        cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/love-11.4-win64/
     - name: Gather packages in output folder
       id: gather-packages
       shell: bash
