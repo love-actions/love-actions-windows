@@ -27,7 +27,7 @@ See related actions below:
 ```yaml
 - name: Build Windows packages
   id: build-packages
-  uses: 26F-Studio/love-actions-windows@main
+  uses: love-action/love-actions-windows@v1
   with:
     icon-path: ./assets/windows/icon.ico
     rc-path: ./assets/windows/template.rc
@@ -39,17 +39,17 @@ See related actions below:
 
 ## All inputs
 
-| Name             | Required | Default         | Description                                                  |
-| :--------------- | -------- | --------------- | ------------------------------------------------------------ |
-| `icon-path`      | `false`  | `"./icon.ico"`  | Path to the exe's icon. Use LÖVE default if not specified |
-| `rc-path`        | `true`   | `""`            | Path to the `.rc` file. Used to compile exe's resource file |
-| `love-package`   | `false`  | `"./game.love"` | Path to the appImage's icon. Use LÖVE default if not specified |
-| `product-name`   | `false`  | `"love_app"`    | Love package. Used to assemble the executable              |
-| `version-string` | `false`  | `"11.4"`        | Base name of the package. Used to rename products          |
-| `output-folder`  | `false`  | `"./build"`     | Packages output folder. All packages would be placed here   |
+| Name               | Required  | Default           | Description                                                     |
+| :----------------- | --------- | ----------------- | --------------------------------------------------------------- |
+| `icon-path`      | `false` | `"./icon.ico"`  | Path to the exe's icon. Use LÖVE default if not specified      |
+| `rc-path`        | `true`  | `""`            | Path to the `.rc` file. Used to compile exe's resource file   |
+| `love-package`   | `false` | `"./game.love"` | Path to the appImage's icon. Use LÖVE default if not specified |
+| `product-name`   | `false` | `"love_app"`    | Love package. Used to assemble the executable                   |
+| `version-string` | `false` | `"11.4"`        | Base name of the package. Used to rename products               |
+| `output-folder`  | `false` | `"./build"`     | Packages output folder. All packages would be placed here       |
 
 ## All outputs
 
-| Name            | Example                                             | Description                                                  |
-| :-------------- | --------------------------------------------------- | ------------------------------------------------------------ |
+| Name              | Example                                               | Description                                                                                     |
+| :---------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `package-paths` | `./build/love_app_x86.zip ./build/love_app_x64.zip` | Built packages' paths in a bash-style list relative to the repository root, separated by spaces |
