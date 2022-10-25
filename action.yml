@@ -144,7 +144,7 @@ runs:
       run: |
         7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/love-11.4-win32/*
         7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/love-11.4-win64/*
-        echo "package-paths=$(ls -d ${{ inputs.output-folder }}/*)" >> $GITHUB_OUTPUT
+        echo "package-paths=$(ls -d ${{ inputs.output-folder }}/* | tr '\r\n' ' ')" >> $GITHUB_OUTPUT
     - name: Cleanup
       shell: bash
       run: |
