@@ -13,8 +13,10 @@ inputs:
   rc-path:
     description: |
       Path to the .rc file
-      Would be used to compile exe's resource file
-    required: true
+      will be used to set the metadata of the exe
+      If it is not provided, the compiled exe file will not have any metadata defined by the .rc file
+    required: false
+    default: ""
   love-package:
     description: |
       Love package
@@ -65,7 +67,7 @@ runs:
     - name: Create directories
       shell: bash
       run: |
-        mkdir -p ./love-actions-windows/
+        mkdir ./love-actions-windows/
         mkdir -p ${{ inputs.output-folder }}
     - name: Download love and ResourceHacker
       env:
@@ -85,49 +87,48 @@ runs:
         curl -L --retry 5 http://www.angusj.com/resourcehacker/resource_hacker.zip -o ${{ env.TEMP_PATH }}
         7z x ${{ env.TEMP_PATH }} -o./
         rm ${{ env.TEMP_PATH }}
-    - name: Update Windows template
-      shell: python3 {0}
-      run: |
-        version_string = "${{ inputs.version-string }}"
-        file_version = (f"{version_string.replace('.', ',')},0")
-        with open("${{ inputs.rc-path }}", "r", encoding="utf8") as file:
-          data = file.read()
-          data = data\
-            .replace("@Version", version_string)\
-            .replace("@FileVersion", file_version)
-        with open("./love-actions-windows/game.rc", "w+", encoding="utf8") as file:
-          file.write(data)
     - name: Assemble product folders
       shell: pwsh
       run: |
         mv ${{ inputs.love-package }} ./love-actions-windows/game.love
         cp ${{ inputs.icon-path }} ./love-actions-windows/icon.ico
-        
+
         cd ./love-actions-windows/
 
-        cmd /c '".\ResourceHacker.exe" -open ".\game.rc" -save ".\${{ inputs.product-name }}.res" -action compile'
-
         cmd /c copy /b .\love-11.4-win32\love.exe + .\game.love .\love-11.4-win32\${{ inputs.product-name }}.exe
+
         del .\love-11.4-win32\love.exe
         del .\love-11.4-win32\lovec.exe
         del .\love-11.4-win32\game.ico
         del .\love-11.4-win32\love.ico
         del .\love-11.4-win32\changes.txt
         del .\love-11.4-win32\readme.txt
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
 
         cmd /c copy /b .\love-11.4-win64\love.exe + .\game.love .\love-11.4-win64\${{ inputs.product-name }}.exe
+
         del .\love-11.4-win64\love.exe
         del .\love-11.4-win64\lovec.exe
         del .\love-11.4-win64\game.ico
         del .\love-11.4-win64\love.ico
         del .\love-11.4-win64\changes.txt
         del .\love-11.4-win64\readme.txt
+
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask VERSIONINFO,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask VERSIONINFO,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+
+        if(${{ inputs.rc-path }})
+        {
+          cmd /c '".\ResourceHacker.exe" -open "${{ inputs.rc-path }}" -save ".\${{ inputs.product-name }}.res" -action compile'
+
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+        }
     - name: Add extra assets for x86
       if: "${{ inputs.extra-assets-x86 != '' }}"
       shell: bash
