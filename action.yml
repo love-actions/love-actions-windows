@@ -7,7 +7,7 @@ inputs:
   icon-path:
     description: |
       Path to the icon
-      Would be used in building appImage
+      Would be used in building exe
     required: false
     default: "./icon.ico"
   rc-path:
