@@ -86,63 +86,67 @@ runs:
     - name: Assemble product folders
       shell: pwsh
       run: |
-        mv ${{ inputs.love-package }} ./love-actions-windows/game.love
-        cp ${{ inputs.icon-path }} ./love-actions-windows/icon.ico
+        cp ${{ inputs.love-package }} .\love-actions-windows\game.love
+        cp ${{ inputs.icon-path }} .\love-actions-windows\icon.ico
 
-        cd ./love-actions-windows/
+        cd .\love-actions-windows\
 
-        cmd /c copy /b .\love-11.4-win32\love.exe + .\game.love .\love-11.4-win32\${{ inputs.product-name }}.exe
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action delete -mask ICONGROUP,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action delete -mask VERSIONINFO,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
 
-        del .\love-11.4-win32\love.exe
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action delete -mask ICONGROUP,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action delete -mask VERSIONINFO,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+
+        if(${{ inputs.rc-path }})
+        {
+          cmd /c '".\ResourceHacker.exe" -open "${{ inputs.rc-path }}" -save ".\${{ inputs.product-name }}.res" -action compile'
+
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+        }
+
         del .\love-11.4-win32\lovec.exe
         del .\love-11.4-win32\game.ico
         del .\love-11.4-win32\love.ico
         del .\love-11.4-win32\changes.txt
         del .\love-11.4-win32\readme.txt
 
-        cmd /c copy /b .\love-11.4-win64\love.exe + .\game.love .\love-11.4-win64\${{ inputs.product-name }}.exe
-
-        del .\love-11.4-win64\love.exe
         del .\love-11.4-win64\lovec.exe
         del .\love-11.4-win64\game.ico
         del .\love-11.4-win64\love.ico
         del .\love-11.4-win64\changes.txt
         del .\love-11.4-win64\readme.txt
 
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask VERSIONINFO,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+        mkdir .\build\x86
+        mkdir .\build\x64
 
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask VERSIONINFO,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+        cp .\love-11.4-win32\* .\build\x86\
+        cp .\love-11.4-win64\* .\build\x64\
 
-        if(${{ inputs.rc-path }})
-        {
-          cmd /c '".\ResourceHacker.exe" -open "${{ inputs.rc-path }}" -save ".\${{ inputs.product-name }}.res" -action compile'
+        cmd /c copy /b .\build\x86\love.exe + .\game.love .\build\x86\${{ inputs.product-name }}.exe
 
-          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
-
-          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
-        }
+        cmd /c copy /b .\build\x64\love.exe + .\game.love .\build\x64\${{ inputs.product-name }}.exe
     - name: Add extra assets for x86
       if: "${{ inputs.extra-assets-x86 != '' }}"
       shell: bash
       run: |
-        cp -r -f ${{ inputs.extra-assets-x86 }} ./love-actions-windows/love-11.4-win32/
+        cp -r -f ${{ inputs.extra-assets-x86 }} ./love-actions-windows/build/x86/
     - name: Add extra assets for x64
       if: "${{ inputs.extra-assets-x64 != '' }}"
       shell: bash
       run: |
-        cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/love-11.4-win64/
+        cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/build/x64/
     - name: Gather packages in output folder
       id: gather-packages
       shell: bash
       run: |
-        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/love-11.4-win32/*
-        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/love-11.4-win64/*
+        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/build/x86/*
+        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/build/x64/*
         echo "package-paths=$(ls -d ${{ inputs.output-folder }}/* | tr '\r\n' ' ')" >> $GITHUB_OUTPUT
-    - name: Cleanup
+    - name: Clean up
       shell: bash
       run: |
         rm -rf ./love-actions-windows/
