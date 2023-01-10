@@ -16,7 +16,6 @@ inputs:
       will be used to set the metadata of the exe
       If it is not provided, the compiled exe file will not have any metadata defined by the .rc file
     required: false
-    default: ""
   love-package:
     description: |
       Love package
@@ -41,13 +40,6 @@ inputs:
       Would be used to rename products
     required: false
     default: "love_app"
-  version-string:
-    description: |
-      App version string
-      Use 3 numbers seperated by dots
-      Looks like 3.2.1
-    required: false
-    default: "11.4"
   output-folder:
     description: |
       Packages output folder
