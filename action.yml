@@ -61,10 +61,10 @@ runs:
       run: |
         mkdir ./love-actions-windows/
         mkdir -p ${{ inputs.output-folder }}
-    - name: Download love and ResourceHacker
+    - name: Download and set dependencies
       env:
         TEMP_PATH: ./temp.zip
-      shell: bash
+      shell: pwsh
       run: |
         cd ./love-actions-windows/
 
@@ -79,6 +79,10 @@ runs:
         curl -L --retry 5 http://www.angusj.com/resourcehacker/resource_hacker.zip -o ${{ env.TEMP_PATH }}
         7z x ${{ env.TEMP_PATH }} -o./
         rm ${{ env.TEMP_PATH }}
+
+        curl -L --retry 5 https://jrsoftware.org/download.php/is.exe -o is.exe
+        ./is.exe /verysilent
+        rm ./is.exe
     - name: Assemble product folders
       shell: pwsh
       run: |
