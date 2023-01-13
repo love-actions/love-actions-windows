@@ -82,15 +82,15 @@ runs:
         cd ./love-actions-windows/
 
         curl -L --retry 5 https://github.com/love2d/love/releases/download/11.4/love-11.4-win32.zip -o ${{ env.TEMP_PATH }}
-        7z x ${{ env.TEMP_PATH }} -o./
+        7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
 
         curl -L --retry 5 https://github.com/love2d/love/releases/download/11.4/love-11.4-win64.zip -o ${{ env.TEMP_PATH }}
-        7z x ${{ env.TEMP_PATH }} -o./
+        7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
 
         curl -L --retry 5 http://www.angusj.com/resourcehacker/resource_hacker.zip -o ${{ env.TEMP_PATH }}
-        7z x ${{ env.TEMP_PATH }} -o./
+        7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
 
         curl -L --retry 5 https://jrsoftware.org/download.php/is.exe -o is.exe
