@@ -25,13 +25,13 @@ inputs:
   extra-assets-x86:
     description: |
       List of folder & file paths to be added to x86 product folder
-      No global quotation, separated by spaces
+      No global quotation marks, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
   extra-assets-x64:
     description: |
       List of folder & file paths to be added to x64 product folder
-      No global quotation, separated by spaces
+      No global quotation marks, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
   product-name:
@@ -52,7 +52,7 @@ inputs:
   installer-languages:
     description: |
       List of languages supported by the installer
-      No global quotation, separated by spaces
+      No global quotation marks, separated by spaces
   output-folder:
     description: |
       Packages output folder
