@@ -40,6 +40,15 @@ inputs:
       Would be used to rename products
     required: false
     default: "love_app"
+  app-id:
+    description: |
+      The application identifier for the installer
+      If not provided, the installer will not be build
+    required: false
+  project-website:
+    description: |
+      The project's homepage url
+    required: false
   output-folder:
     description: |
       Packages output folder
@@ -139,12 +148,184 @@ runs:
       shell: bash
       run: |
         cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/build/x64/
+    - name: Create iss file
+      if: "${{ inputs.app-id != '' }}"
+      shell: python3
+      run: |
+        import os
+        import re
+
+        os.chdir('./love-actions-windows')
+
+        rc_path = '${{ inputs.rc-path }}'
+        value_dict: dict = {}
+
+        if rc_path != '':
+            with open("${{ inputs.rc-path }}", "r", encoding='UTF-8') as f:
+                content = f.read()
+                string_file_info = re.findall(
+                    r'BLOCK "StringFileInfo"[\s\S]*?}',
+                    content,
+                    re.IGNORECASE
+                )
+
+            value_dict = {}
+
+            for i in string_file_info:
+                value = dict(re.findall((r'VALUE "([\w ]+)", (.*)'), i, re.IGNORECASE))
+                value_dict.update(value)
+
+            for i, j in value_dict.items():
+                j = j.replace('"', '')
+                value_dict[i] = j
+
+        template_iss = r'''
+        #pragma encoding("utf-8")
+
+        #define AppWebsite "${{ inputs.project-website }}"
+
+        [Setup]
+        AppId=${{ inputs.app-id }}
+        AppName=@AppName
+        AppVersion=@AppVersion
+        AppVerName=@AppName @AppVersion
+        AppPublisher=@AppPublisher
+        AppCopyright=@Copyright
+        AppPublisherURL={#AppWebsite}
+        AppSupportURL={#AppWebsite}
+        AppUpdatesURL={#AppWebsite}
+        DefaultDirName={autopf}\@AppName
+        DefaultGroupName=@AppName
+        AllowNoIcons=yes
+        LicenseFile=.\love-11.4-win64\license.txt
+        PrivilegesRequired=lowest
+        PrivilegesRequiredOverridesAllowed=dialog
+        OutputDir=.\installer
+        OutputBaseFilename=@AppName_installer
+        SetupIconFile=.\icon.ico
+        Compression=lzma
+        SolidCompression=yes
+        WizardStyle=modern
+        ArchitecturesInstallIn64BitMode=x64
+
+        [Languages]
+        Name: "Chinese_Simplified"; MessagesFile: ".\ChineseSimplified.isl"
+        Name: "English"; MessagesFile: "compiler:Default.isl"
+        Name: "French"; MessagesFile: "compiler:Languages\French.isl"
+        Name: "Japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
+
+        [Tasks]
+        Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+        [Files]
+        Source: ".\game.love"; DestDir: "{app}\Temp"
+
+        Source: ".\love-11.4-win64\love.exe"; DestDir: "{app}\Temp"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\license.txt"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\love.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\lua51.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\mpg123.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\msvcp120.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\msvcr120.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\OpenAL32.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\SDL2.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+
+        Source: ".\love-11.4-win32\love.exe"; DestDir: "{app}\Temp"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\license.txt"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\love.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\lua51.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\mpg123.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\msvcp120.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\msvcr120.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\OpenAL32.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\SDL2.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+
+        @ExtraAssets
+
+        [Icons]
+        Name: "{group}\@AppName"; Filename: "{app}\@ExeName"
+        Name: "{group}\{cm:UninstallProgram,@AppName}"; Filename: "{uninstallexe}"
+        Name: "{autodesktop}\@AppName"; Filename: "{app}\@ExeName"; Tasks: desktopicon
+
+        [Run]
+        Filename: "{app}\@ExeName"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+        [Code]
+
+        procedure CurStepChanged(CurStep: TSetupStep);
+        var
+            InstallDir: string;
+            ResultCode: Integer;
+        begin
+            if CurStep = ssPostinstall then
+            begin
+                InstallDir := ExpandConstant('{app}');
+                Exec('cmd.exe', '/c copy /b .\love.exe + .\game.love ..\@ExeName', InstallDir + '\Temp', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+                Exec('cmd.exe', '/c rd /S /Q "' + InstallDir + '\Temp"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            end;
+        end;
+        '''
+
+        extra_assets_x86_list = r'${{ inputs.extra-assets-x86 }}/'.split()
+        extra_assets_x64_list = r'${{ inputs.extra-assets-x64 }}/'.split()
+        extra_assets = ''
+
+        for i in extra_assets_x86_list:
+            dest_dir = '{app}'
+            flag = ''
+            i = i.rstrip('/')
+            i = i.rstrip('\\')
+            if os.path.isdir(i):
+                dir_name = os.path.basename(i)
+                dest_dir = f'{{app}}/{os.path.basename(i)}'
+                flag = '; Flags: recursesubdirs'
+            extra_assets += f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: not Is64BitInstallMode\n'
+
+        for i in extra_assets_x64_list:
+            dest_dir = '{app}'
+            flag = ''
+            i = i.rstrip('/')
+            i = i.rstrip('\\')
+            if os.path.isdir(i):
+                dir_name = os.path.basename(i)
+                dest_dir = f'{{app}}/{os.path.basename(i)}'
+                flag = '; Flags: recursesubdirs'
+            extra_assets += f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: Is64BitInstallMode\n'
+
+        processed_iss = template_iss.replace(
+            '@AppName',
+            product_name := (value_dict['ProductName'] if 'ProductName' in value_dict else r'${{ inputs.product-name }}')
+        ).replace(
+            '@AppVersion',
+            value_dict['ProductVersion'] if 'ProductVersion' in value_dict else value_dict['FileVersion'] if 'FileVersion' in value_dict else '0.0.0.0'
+        ).replace(
+            '@AppPublisher',
+            value_dict['CompanyName'] if 'CompanyName' in value_dict else ''
+        ).replace(
+            '@Copyright',
+            value_dict['LegalCopyright'] if 'LegalCopyright' in value_dict else ''
+        ).replace(
+            '@ExeName',
+            f'{product_name}.exe'
+        ).replace(
+            '@ExtraAssets',
+            extra_assets
+        )
+
+        with open('./${{ inputs.product-name }}.iss', 'w', encoding='UTF-8') as file:
+            file.write(processed_iss)
+    - name: Build installer
+      if: "${{ inputs.app-id != '' }}"
+      shell: pwsh
+      run: |
+        iscc ./${{ inputs.product-name }}.iss
     - name: Gather packages in output folder
       id: gather-packages
       shell: bash
       run: |
         7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/build/x86/*
         7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/build/x64/*
+        mv ./love-actions-windows/installer/${{ inputs.product-name }}_installer.exe ${{ inputs.output-folder }}
         echo "package-paths=$(ls -d ${{ inputs.output-folder }}/* | tr '\r\n' ' ')" >> $GITHUB_OUTPUT
     - name: Clean up
       shell: bash
