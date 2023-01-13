@@ -200,7 +200,7 @@ runs:
         os.chdir('./love-actions-windows')
 
         template_iss = r'''
-        #define AppName @AppName
+        #define AppName "@AppName"
         #define AppWebsite "${{ inputs.project-website }}"
 
         [Setup]
@@ -264,7 +264,7 @@ runs:
         Name: "{autodesktop}\{#AppName}"; Filename: "{app}\@ExeName"; Tasks: desktopicon
 
         [Run]
-        Filename: "{app}\@ExeName"; Description: "{cm:LaunchProgram,{#StringChange({#AppName}, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+        Filename: "{app}\@ExeName"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
         [Code]
 
