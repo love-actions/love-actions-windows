@@ -153,32 +153,34 @@ runs:
       run: |
         cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/build/x64/
     - name: Checkout issrc
-      if: "${{ inputs.app-id != '' }}"
       uses: actions/checkout@v3
       with:
         path: ./love-actions-windows/issrc
         repository: jrsoftware/issrc
     - name: Processing language files
-      if: "${{ inputs.app-id != '' }}"
       shell: bash
       run: |
-        mkdir -p ./love-actions-windows/language
-        languages="${{ inputs.installer-languages }}"
-        mv ./love-actions-windows/issrc/Files/Languages/Unofficial/* ./love-actions-windows/issrc/Files/Languages/
-        rm -rf ./love-actions-windows/issrc/Files/Languages/Unofficial
-        for item in $languages; do
-          if test -f $item; then
-            cp $item ./love-actions-windows/language
-          else
-            cp ./love-actions-windows/issrc/Files/Languages/$item ./love-actions-windows/language
-          fi
-        done
+        if '${{ inputs.app-id }}' != ''; then
+          mkdir -p ./love-actions-windows/language
+          languages="${{ inputs.installer-languages }}"
+          mv ./love-actions-windows/issrc/Files/Languages/Unofficial/* ./love-actions-windows/issrc/Files/Languages/
+          rm -rf ./love-actions-windows/issrc/Files/Languages/Unofficial
+          for item in $languages; do
+            if test -f $item; then
+              cp $item ./love-actions-windows/language
+            else
+              cp ./love-actions-windows/issrc/Files/Languages/$item ./love-actions-windows/language
+            fi
+          done
+        fi
     - name: Create iss file
-      if: "${{ inputs.app-id != '' }}"
       shell: python3
       run: |
         import os
         import re
+
+        if '${{ inputs.app-id }}' == '':
+            exit(0)
 
         os.chdir('./love-actions-windows')
 
