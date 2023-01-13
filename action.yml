@@ -354,6 +354,7 @@ runs:
     - name: Build installer
       shell: pwsh
       run: |
+        cd ./love-actions-windows
         iscc ./${{ inputs.product-name }}.iss
     - name: Gather packages in output folder
       id: gather-packages
