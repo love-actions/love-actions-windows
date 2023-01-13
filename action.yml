@@ -162,6 +162,7 @@ runs:
         mkdir -p ./love-actions-windows/language
         languages="${{ inputs.installer-languages }}"
         mv ./love-actions-windows/issrc/Files/Languages/Unofficial/* ./love-actions-windows/issrc/Files/Languages/
+        cp ./love-actions-windows/issrc/Files/Default.isl ./love-actions-windows/issrc/Files/Languages/English.isl
         rm -rf ./love-actions-windows/issrc/Files/Languages/Unofficial
         for item in $languages; do
           if test -f $item; then
