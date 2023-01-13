@@ -43,8 +43,7 @@ inputs:
   app-id:
     description: |
       The application identifier for the installer
-      If not provided, the installer will not be build
-    required: false
+    required: true
   project-website:
     description: |
       The project's homepage url
@@ -160,27 +159,22 @@ runs:
     - name: Processing language files
       shell: bash
       run: |
-        if '${{ inputs.app-id }}' != ''; then
-          mkdir -p ./love-actions-windows/language
-          languages="${{ inputs.installer-languages }}"
-          mv ./love-actions-windows/issrc/Files/Languages/Unofficial/* ./love-actions-windows/issrc/Files/Languages/
-          rm -rf ./love-actions-windows/issrc/Files/Languages/Unofficial
-          for item in $languages; do
-            if test -f $item; then
-              cp $item ./love-actions-windows/language
-            else
-              cp ./love-actions-windows/issrc/Files/Languages/$item ./love-actions-windows/language
-            fi
-          done
-        fi
+        mkdir -p ./love-actions-windows/language
+        languages="${{ inputs.installer-languages }}"
+        mv ./love-actions-windows/issrc/Files/Languages/Unofficial/* ./love-actions-windows/issrc/Files/Languages/
+        rm -rf ./love-actions-windows/issrc/Files/Languages/Unofficial
+        for item in $languages; do
+          if test -f $item; then
+            cp $item ./love-actions-windows/language
+          else
+            cp ./love-actions-windows/issrc/Files/Languages/$item ./love-actions-windows/language
+          fi
+        done
     - name: Create iss file
-      shell: python3
+      shell: python3 {0}
       run: |
         import os
         import re
-
-        if '${{ inputs.app-id }}' == '':
-            exit(0)
 
         os.chdir('./love-actions-windows')
 
@@ -357,7 +351,6 @@ runs:
         with open('./${{ inputs.product-name }}.iss', 'w', encoding='UTF-8') as file:
             file.write(processed_iss)
     - name: Build installer
-      if: "${{ inputs.app-id != '' }}"
       shell: pwsh
       run: |
         iscc ./${{ inputs.product-name }}.iss
