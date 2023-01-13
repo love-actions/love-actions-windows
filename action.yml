@@ -177,8 +177,6 @@ runs:
         import os
         import re
 
-        os.chdir('./love-actions-windows')
-
         rc_path = '${{ inputs.rc-path }}'
         value_dict: dict = {}
 
@@ -198,6 +196,8 @@ runs:
             for i, j in value_dict.items():
                 j = j.replace('"', '')
                 value_dict[i] = j
+
+        os.chdir('./love-actions-windows')
 
         template_iss = r'''
         #pragma encoding("utf-8")
