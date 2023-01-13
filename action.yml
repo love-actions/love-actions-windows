@@ -112,7 +112,7 @@ runs:
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action delete -mask VERSIONINFO,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
 
-        if(${{ inputs.rc-path }})
+        if("${{ inputs.rc-path }}")
         {
           cmd /c '".\ResourceHacker.exe" -open "${{ inputs.rc-path }}" -save ".\${{ inputs.product-name }}.res" -action compile'
 
