@@ -95,7 +95,7 @@ runs:
 
         curl -L --retry 5 https://jrsoftware.org/download.php/is.exe -o is.exe
         ./is.exe /verysilent
-        rm ./is.exe
+        # rm ./is.exe
     - name: Assemble product folders
       shell: pwsh
       run: |
