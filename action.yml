@@ -316,7 +316,7 @@ runs:
         languages = ''
         for i in language_file_list:
             name = os.path.splitext(i)[0]
-            languages += f'Name: "{name}"; MessagesFile: ".\\Languages\\{i}"\n'
+            languages += f'Name: "{name}"; MessagesFile: ".\\language\\{i}"\n'
 
         processed_iss = (
             template_iss.replace(
