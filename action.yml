@@ -200,28 +200,27 @@ runs:
         os.chdir('./love-actions-windows')
 
         template_iss = r'''
-        #pragma encoding("utf-8")
-
+        #define AppName @AppName
         #define AppWebsite "${{ inputs.project-website }}"
 
         [Setup]
         AppId=${{ inputs.app-id }}
-        AppName=@AppName
+        AppName={#AppName}
         AppVersion=@AppVersion
-        AppVerName=@AppName @AppVersion
+        AppVerName={#AppName} @AppVersion
         AppPublisher=@AppPublisher
         AppCopyright=@Copyright
         AppPublisherURL={#AppWebsite}
         AppSupportURL={#AppWebsite}
         AppUpdatesURL={#AppWebsite}
-        DefaultDirName={autopf}\@AppName
-        DefaultGroupName=@AppName
+        DefaultDirName={autopf}\{#AppName}
+        DefaultGroupName={#AppName}
         AllowNoIcons=yes
         LicenseFile=.\love-11.4-win64\license.txt
         PrivilegesRequired=lowest
         PrivilegesRequiredOverridesAllowed=dialog
         OutputDir=.\installer
-        OutputBaseFilename=@AppName_installer
+        OutputBaseFilename={#AppName}_installer
         SetupIconFile=.\icon.ico
         Compression=lzma
         SolidCompression=yes
@@ -260,12 +259,12 @@ runs:
         @ExtraAssets
 
         [Icons]
-        Name: "{group}\@AppName"; Filename: "{app}\@ExeName"
-        Name: "{group}\{cm:UninstallProgram,@AppName}"; Filename: "{uninstallexe}"
-        Name: "{autodesktop}\@AppName"; Filename: "{app}\@ExeName"; Tasks: desktopicon
+        Name: "{group}\{#AppName}"; Filename: "{app}\@ExeName"
+        Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
+        Name: "{autodesktop}\{#AppName}"; Filename: "{app}\@ExeName"; Tasks: desktopicon
 
         [Run]
-        Filename: "{app}\@ExeName"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+        Filename: "{app}\@ExeName"; Description: "{cm:LaunchProgram,{#StringChange({#AppName}, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
         [Code]
 
