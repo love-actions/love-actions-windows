@@ -315,7 +315,7 @@ runs:
         language_file_list = os.listdir('./language')
         languages = ''
         for i in language_file_list:
-            name = os.path.splitext(i)[1]
+            name = os.path.splitext(i)[0]
             languages += f'Name: "{name}"; MessagesFile: ".\\Languages\\{i}"\n'
 
         processed_iss = (
