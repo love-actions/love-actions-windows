@@ -197,8 +197,6 @@ runs:
                 j = j.replace('"', '')
                 value_dict[i] = j
 
-        os.chdir('./love-actions-windows')
-
         template_iss = r'''
         #define AppName "@AppName"
         #define AppWebsite "${{ inputs.project-website }}"
@@ -291,6 +289,7 @@ runs:
             flag = ''
             i = i.rstrip('/')
             i = i.rstrip('\\')
+            i = os.path.abspath(i)
             if os.path.isdir(i):
                 dir_name = os.path.basename(i)
                 dest_dir = f'{{app}}/{os.path.basename(i)}'
@@ -304,6 +303,7 @@ runs:
             flag = ''
             i = i.rstrip('/')
             i = i.rstrip('\\')
+            i = os.path.abspath(i)
             if os.path.isdir(i):
                 dir_name = os.path.basename(i)
                 dest_dir = f'{{app}}/{os.path.basename(i)}'
@@ -312,7 +312,7 @@ runs:
                 f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: Is64BitInstallMode\n'
             )
 
-        language_file_list = os.listdir('./language')
+        language_file_list = os.listdir('./love-actions-windows/language')
         languages = ''
         for i in language_file_list:
             name = os.path.splitext(i)[0]
@@ -348,7 +348,9 @@ runs:
             .replace('@Languages', languages)
         )
 
-        with open('./${{ inputs.product-name }}.iss', 'w', encoding='UTF-8') as file:
+        with open(
+            './love-actions-windows/${{ inputs.product-name }}.iss', 'w', encoding='UTF-8'
+        ) as file:
             file.write(processed_iss)
     - name: Build installer
       shell: pwsh
