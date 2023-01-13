@@ -25,13 +25,13 @@ inputs:
   extra-assets-x86:
     description: |
       List of folder & file paths to be added to x86 product folder
-      Don't need global quotes, separated by spaces
+      No global quotation, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
   extra-assets-x64:
     description: |
       List of folder & file paths to be added to x64 product folder
-      Don't need global quotes, separated by spaces
+      No global quotation, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
   product-name:
@@ -49,6 +49,10 @@ inputs:
     description: |
       The project's homepage url
     required: false
+  installer-languages:
+    description: |
+      List of languages supported by the installer
+      No global quotation, separated by spaces
   output-folder:
     description: |
       Packages output folder
@@ -129,8 +133,8 @@ runs:
         del .\love-11.4-win64\changes.txt
         del .\love-11.4-win64\readme.txt
 
-        mkdir .\build\x86
-        mkdir .\build\x64
+        mkdir -p .\build\x86
+        mkdir -p .\build\x64
 
         cp .\love-11.4-win32\* .\build\x86\
         cp .\love-11.4-win64\* .\build\x64\
@@ -148,6 +152,27 @@ runs:
       shell: bash
       run: |
         cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/build/x64/
+    - name: Checkout issrc
+      if: "${{ inputs.app-id != '' }}"
+      uses: actions/checkout@v3
+      with:
+        path: ./love-actions-windows/issrc
+        repository: jrsoftware/issrc
+    - name: Processing language files
+      if: "${{ inputs.app-id != '' }}"
+      shell: bash
+      run: |
+        mkdir -p ./love-actions-windows/language
+        languages="${{ inputs.installer-languages }}"
+        mv ./love-actions-windows/issrc/Files/Languages/Unofficial/* ./love-actions-windows/issrc/Files/Languages/
+        rm -rf ./love-actions-windows/issrc/Files/Languages/Unofficial
+        for item in $languages; do
+          if test -f $item; then
+            cp $item ./love-actions-windows/language
+          else
+            cp ./love-actions-windows/issrc/Files/Languages/$item ./love-actions-windows/language
+          fi
+        done
     - name: Create iss file
       if: "${{ inputs.app-id != '' }}"
       shell: python3
@@ -161,12 +186,10 @@ runs:
         value_dict: dict = {}
 
         if rc_path != '':
-            with open("${{ inputs.rc-path }}", "r", encoding='UTF-8') as f:
+            with open('${{ inputs.rc-path }}', 'r', encoding='UTF-8') as f:
                 content = f.read()
                 string_file_info = re.findall(
-                    r'BLOCK "StringFileInfo"[\s\S]*?}',
-                    content,
-                    re.IGNORECASE
+                    r'BLOCK "StringFileInfo"[\s\S]*?}', content, re.IGNORECASE
                 )
 
             value_dict = {}
@@ -209,10 +232,7 @@ runs:
         ArchitecturesInstallIn64BitMode=x64
 
         [Languages]
-        Name: "Chinese_Simplified"; MessagesFile: ".\ChineseSimplified.isl"
-        Name: "English"; MessagesFile: "compiler:Default.isl"
-        Name: "French"; MessagesFile: "compiler:Languages\French.isl"
-        Name: "Japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
+        @Languages
 
         [Tasks]
         Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -279,7 +299,9 @@ runs:
                 dir_name = os.path.basename(i)
                 dest_dir = f'{{app}}/{os.path.basename(i)}'
                 flag = '; Flags: recursesubdirs'
-            extra_assets += f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: not Is64BitInstallMode\n'
+            extra_assets += (
+                f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: not Is64BitInstallMode\n'
+            )
 
         for i in extra_assets_x64_list:
             dest_dir = '{app}'
@@ -290,26 +312,44 @@ runs:
                 dir_name = os.path.basename(i)
                 dest_dir = f'{{app}}/{os.path.basename(i)}'
                 flag = '; Flags: recursesubdirs'
-            extra_assets += f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: Is64BitInstallMode\n'
+            extra_assets += (
+                f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: Is64BitInstallMode\n'
+            )
 
-        processed_iss = template_iss.replace(
-            '@AppName',
-            product_name := (value_dict['ProductName'] if 'ProductName' in value_dict else r'${{ inputs.product-name }}')
-        ).replace(
-            '@AppVersion',
-            value_dict['ProductVersion'] if 'ProductVersion' in value_dict else value_dict['FileVersion'] if 'FileVersion' in value_dict else '0.0.0.0'
-        ).replace(
-            '@AppPublisher',
-            value_dict['CompanyName'] if 'CompanyName' in value_dict else ''
-        ).replace(
-            '@Copyright',
-            value_dict['LegalCopyright'] if 'LegalCopyright' in value_dict else ''
-        ).replace(
-            '@ExeName',
-            f'{product_name}.exe'
-        ).replace(
-            '@ExtraAssets',
-            extra_assets
+        language_file_list = os.listdir('./Languages')
+        languages = ''
+        for i in language_file_list:
+            name = os.path.splitext(i)[1]
+            languages += f'Name: "{name}"; MessagesFile: ".\\Languages\\{i}"\n'
+
+        processed_iss = (
+            template_iss.replace(
+                '@AppName',
+                product_name := (
+                    value_dict['ProductName']
+                    if 'ProductName' in value_dict
+                    else r'${{ inputs.product-name }}'
+                ),
+            )
+            .replace(
+                '@AppVersion',
+                value_dict['ProductVersion']
+                if 'ProductVersion' in value_dict
+                else value_dict['FileVersion']
+                if 'FileVersion' in value_dict
+                else '0.0.0.0',
+            )
+            .replace(
+                '@AppPublisher',
+                value_dict['CompanyName'] if 'CompanyName' in value_dict else '',
+            )
+            .replace(
+                '@Copyright',
+                value_dict['LegalCopyright'] if 'LegalCopyright' in value_dict else '',
+            )
+            .replace('@ExeName', f'{product_name}.exe')
+            .replace('@ExtraAssets', extra_assets)
+            .replace('@Languages', languages)
         )
 
         with open('./${{ inputs.product-name }}.iss', 'w', encoding='UTF-8') as file:
