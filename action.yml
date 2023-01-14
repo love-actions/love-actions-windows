@@ -129,7 +129,9 @@ runs:
 
         if("${{ inputs.icon-path }}")
         {
+          cd ..
           cp ${{ inputs.icon-path }} .\love-actions-windows\icon.ico
+          cd .\love-actions-windows\
           cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
           cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
         }
