@@ -2,7 +2,7 @@
 
 ## About
 
-Github Action for building & deploying Linux `.AppImage` packages of a [LÖVE](https://love2d.org/) framework based game.
+Github Action for building & deploying Windows `.zip` packages and `.exe` installer of a [LÖVE](https://love2d.org/) framework based game.
 
 ### Related actions
 
@@ -29,12 +29,7 @@ See related actions below:
   id: build-packages
   uses: love-action/love-actions-windows@v1
   with:
-    icon-path: ./assets/windows/icon.ico
-    rc-path: ./assets/windows/template.rc
     love-package: ./game.love
-    product-name: love_app
-    version-string: "2.3.4"
-    output-folder: "./dist"
 ```
 
 ## With [Love actions bare package](https://github.com/marketplace/actions/love-actions-bare-package) and [Love actions for testing](https://github.com/marketplace/actions/love-actions-for-testing)
@@ -102,13 +97,15 @@ jobs:
         id: build-packages
         uses: love-actions/love-actions-windows@v1
         with:
+          love-package: ${{ env.CORE_LOVE_PACKAGE_PATH }}
           icon-path: ./.github/build/windows/${{ env.BUILD_TYPE }}/icon.ico
           rc-path: ./.github/build/windows/${{ env.BUILD_TYPE }}/template.rc
-          love-package: ${{ env.CORE_LOVE_PACKAGE_PATH }}
           extra-assets-x86: ./ColdClear/x86/CCloader.dll ./ColdClear/x86/cold_clear.dll
           extra-assets-x64: ./ColdClear/x64/CCloader.dll ./ColdClear/x64/cold_clear.dll
           product-name: ${{ env.PRODUCT_NAME }}
-          version-string: "1.0.0"
+          app-id: ${{ secrets.APP_ID }}
+          project-website: https://www.example.com/
+          installer-languages: English.isl ChineseSimplified.isl Japanese.isl French.isl
           output-folder: ${{ env.OUTPUT_FOLDER }}
       - name: Upload 32-bit artifact
         uses: actions/upload-artifact@v3
@@ -120,21 +117,30 @@ jobs:
         with:
           name: ${{ needs.get-info.outputs.base-name }}_Windows_x64
           path: ${{ env.OUTPUT_FOLDER }}/${{ env.PRODUCT_NAME }}_x64.zip
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ needs.get-info.outputs.base-name }}_Windows_installer
+          path: ${{ env.OUTPUT_FOLDER }}/${{ env.PRODUCT_NAME }}_installer.exe
 ```
 
 ## All inputs
 
-| Name               | Required  | Default           | Description                                                     |
-| :----------------- | --------- | ----------------- | --------------------------------------------------------------- |
-| `icon-path`      | `false` | `"./icon.ico"`  | Path to the exe's icon. Use LÖVE default if not specified      |
-| `rc-path`        | `true`  | `""`            | Path to the `.rc` file. Used to compile exe's resource file   |
-| `love-package`   | `false` | `"./game.love"` | Path to the appImage's icon. Use LÖVE default if not specified |
-| `product-name`   | `false` | `"love_app"`    | Love package. Used to assemble the executable                   |
-| `version-string` | `false` | `"11.4"`        | Base name of the package. Used to rename products               |
-| `output-folder`  | `false` | `"./build"`     | Packages output folder. All packages would be placed here       |
+| Name                  | Required | Default       | Description                                                                                     |
+| --------------------- | -------- | ------------- | ----------------------------------------------------------------------------------------------- |
+| `love-package`        | `true`   | `N/A`         | Love package. Used to assemble the executable.                                                  |
+| `icon-path`           | `false`  | `N/A`         | Path to the exe's icon. If not specified, the product has no icon.                              |
+| `rc-path`             | `false`  | `N/A`         | Path to the `.rc` file. Used to configure the properties of the product.                        |
+| `extra-assets-x86`    | `false`  | `N/A`         | List of folder & file paths to be added to x86 product folder.                                  |
+| `extra-assets-x64`    | `false`  | `N/A`         | List of folder & file paths to be added to x64 product folder.                                  |
+| `product-name`        | `false`  | `"love_app"`  | Base name of the package.                                                                       |
+| `app-id`              | `false`  | `N/A`         | The application identifier for the installer. If not provided, the installer will not be build. |
+| `project-website`     | `false`  | `N/A`         | The project's homepage url.                                                                     |
+| `installer-languages` | `false`  | `English.isl` | List of languages supported by the installer.                                                   |
+| `output-folder`       | `false`  | `"./build"`   | Packages output folder. All packages would be placed here.                                      |
 
 ## All outputs
 
-| Name              | Example                                               | Description                                                                                     |
-| :---------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `package-paths` | `./build/love_app_x86.zip ./build/love_app_x64.zip` | Built packages' paths in a bash-style list relative to the repository root, separated by spaces |
+| Name              | Example                                                                            | Description                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------- | -----------------------------------------------------------------------------------------------  |
+| `package-paths`   | `./build/love_app_x86.zip ./build/love_app_x64.zip ./build/love_app_installer.exe` | Built packages' paths in a bash-style list relative to the repository root, separated by spaces. |
