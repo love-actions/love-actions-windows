@@ -30,6 +30,13 @@ See related actions below:
   uses: love-action/love-actions-windows@v1
   with:
     love-package: ./game.love
+    icon-path: ./assets/windows/icon.ico
+    rc-path: ./assets/windows/template.rc
+    product-name: love_app
+    app-id: com.example.app
+    product-website: https://www.example.com
+    installer-languages: English.isl ChineseSimplified.isl
+    output-folder: "./dist"
 ```
 
 ## With [Love actions bare package](https://github.com/marketplace/actions/love-actions-bare-package) and [Love actions for testing](https://github.com/marketplace/actions/love-actions-for-testing)
@@ -126,21 +133,21 @@ jobs:
 
 ## All inputs
 
-| Name                  | Required | Default       | Description                                                                                     |
-| --------------------- | -------- | ------------- | ----------------------------------------------------------------------------------------------- |
-| `love-package`        | `true`   | `N/A`         | Love package. Used to assemble the executable.                                                  |
-| `icon-path`           | `false`  | `N/A`         | Path to the exe's icon. If not specified, the product has no icon.                              |
-| `rc-path`             | `false`  | `N/A`         | Path to the `.rc` file. Used to configure the properties of the product.                        |
-| `extra-assets-x86`    | `false`  | `N/A`         | List of folder & file paths to be added to x86 product folder.                                  |
-| `extra-assets-x64`    | `false`  | `N/A`         | List of folder & file paths to be added to x64 product folder.                                  |
-| `product-name`        | `false`  | `"love_app"`  | Base name of the package.                                                                       |
-| `app-id`              | `false`  | `N/A`         | The application identifier for the installer. If not provided, the installer will not be build. |
-| `project-website`     | `false`  | `N/A`         | The project's homepage url.                                                                     |
-| `installer-languages` | `false`  | `English.isl` | List of languages supported by the installer.                                                   |
-| `output-folder`       | `false`  | `"./build"`   | Packages output folder. All packages would be placed here.                                      |
+| Name                    | Required  | Default         | Description                                                                                     |
+| ----------------------- | --------- | --------------- | ----------------------------------------------------------------------------------------------- |
+| `love-package`        | `true`  | `N/A`         | Love package. Used to assemble the executable.                                                  |
+| `icon-path`           | `false` | `N/A`         | Path to the exe's icon. If not specified, the product has no icon.                              |
+| `rc-path`             | `false` | `N/A`         | Path to the `.rc` file. Used to configure the properties of the product.                      |
+| `extra-assets-x86`    | `false` | `N/A`         | List of folder & file paths to be added to x86 product folder.                                  |
+| `extra-assets-x64`    | `false` | `N/A`         | List of folder & file paths to be added to x64 product folder.                                  |
+| `product-name`        | `false` | `"love_app"`  | Base name of the package.                                                                       |
+| `app-id`              | `false` | `N/A`         | The application identifier for the installer. If not provided, the installer will not be build. |
+| `project-website`     | `false` | `N/A`         | The project's homepage url.                                                                     |
+| `installer-languages` | `false` | `English.isl` | List of languages supported by the installer.                                                   |
+| `output-folder`       | `false` | `"./build"`   | Packages output folder. All packages would be placed here.                                      |
 
 ## All outputs
 
-| Name              | Example                                                                            | Description                                                                                      |
-| ----------------- | ---------------------------------------------------------------------------------- | -----------------------------------------------------------------------------------------------  |
-| `package-paths`   | `./build/love_app_x86.zip ./build/love_app_x64.zip ./build/love_app_installer.exe` | Built packages' paths in a bash-style list relative to the repository root, separated by spaces. |
+| Name              | Example                                                                              | Description                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `package-paths` | `./build/love_app_x86.zip ./build/love_app_x64.zip ./build/love_app_installer.exe` | Built packages' paths in a bash-style list relative to the repository root, separated by spaces. |
