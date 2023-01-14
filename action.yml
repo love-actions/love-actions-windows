@@ -4,6 +4,11 @@ branding:
   icon: "heart"
   color: "blue"
 inputs:
+  love-package:
+    description: |
+      Love package
+      Would be used to assemble the executable
+    required: true
   icon-path:
     description: |
       Path to the icon
@@ -16,12 +21,6 @@ inputs:
       will be used to set the metadata of the exe
       If it is not provided, the compiled exe file will not have any metadata defined by the .rc file
     required: false
-  love-package:
-    description: |
-      Love package
-      Would be used to assemble the executable
-    required: false
-    default: "./game.love"
   extra-assets-x86:
     description: |
       List of folder & file paths to be added to x86 product folder
