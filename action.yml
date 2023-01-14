@@ -13,8 +13,8 @@ inputs:
     description: |
       Path to the icon
       Would be used in building exe
+      If not provided, the product will not have an icon
     required: false
-    default: "./icon.ico"
   rc-path:
     description: |
       Path to the .rc file
@@ -103,17 +103,21 @@ runs:
       shell: pwsh
       run: |
         cp ${{ inputs.love-package }} .\love-actions-windows\game.love
-        cp ${{ inputs.icon-path }} .\love-actions-windows\icon.ico
 
         cd .\love-actions-windows\
 
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action delete -mask ICONGROUP,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action delete -mask VERSIONINFO,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
 
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action delete -mask ICONGROUP,,'
         cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action delete -mask VERSIONINFO,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+
+        if("${{ inputs.icon-path }}")
+        {
+          cp ${{ inputs.icon-path }} .\love-actions-windows\icon.ico
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+        }
 
         if("${{ inputs.rc-path }}")
         {
@@ -228,7 +232,7 @@ runs:
         PrivilegesRequiredOverridesAllowed=dialog
         OutputDir=.\installer
         OutputBaseFilename={#AppName}_installer
-        SetupIconFile=.\icon.ico
+        @Icon
         Compression=lzma
         SolidCompression=yes
         WizardStyle=modern
@@ -274,7 +278,6 @@ runs:
         Filename: "{app}\@ExeName"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
         [Code]
-
         procedure CurStepChanged(CurStep: TSetupStep);
         var
             InstallDir: string;
@@ -355,6 +358,9 @@ runs:
             .replace('@ExeName', f'{product_name}.exe')
             .replace('@ExtraAssets', extra_assets)
             .replace('@Languages', languages)
+            .replace(
+                '@Icon', 'SetupIconFile=.\icon.ico' if r'${{ inputs.icon-path }}' != '' else ''
+            )
         )
 
         with open(
