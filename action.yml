@@ -139,8 +139,10 @@ runs:
         cp .\love-11.4-win64\* .\build\x64\
 
         cmd /c copy /b .\build\x86\love.exe + .\game.love .\build\x86\${{ inputs.product-name }}.exe
+        del .\build\x86\love.exe
 
         cmd /c copy /b .\build\x64\love.exe + .\game.love .\build\x64\${{ inputs.product-name }}.exe
+        del .\build\x64\love.exe
     - name: Add extra assets for x86
       if: "${{ inputs.extra-assets-x86 != '' }}"
       shell: bash
