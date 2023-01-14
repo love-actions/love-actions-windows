@@ -43,7 +43,8 @@ inputs:
   app-id:
     description: |
       The application identifier for the installer
-    required: true
+      If not provided, the installer will not be build
+    required: false
   project-website:
     description: |
       The project's homepage url
@@ -92,9 +93,13 @@ runs:
         7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
 
-        curl -L --retry 5 https://jrsoftware.org/download.php/is.exe -o is.exe
-        ./is.exe /verysilent
-        # rm ./is.exe
+        if("${{ inputs.app-id }}")
+        {
+          curl -L --retry 5 https://jrsoftware.org/download.php/is.exe -o is.exe
+          ./is.exe /verysilent
+          # rm ./is.exe
+          # It seems that this is because the silent installation will simply return after execution, resulting in a delete error
+        }
     - name: Assemble product folders
       shell: pwsh
       run: |
@@ -154,11 +159,13 @@ runs:
       run: |
         cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/build/x64/
     - name: Checkout issrc
+      if: "${{ inputs.app-id != '' }}"
       uses: actions/checkout@v3
       with:
         path: ./love-actions-windows/issrc
         repository: jrsoftware/issrc
     - name: Processing language files
+      if: "${{ inputs.app-id != '' }}"
       shell: bash
       run: |
         mkdir -p ./love-actions-windows/language
@@ -174,6 +181,7 @@ runs:
           fi
         done
     - name: Create iss file
+      if: "${{ inputs.app-id != '' }}"
       shell: python3 {0}
       run: |
         import os
@@ -355,6 +363,7 @@ runs:
         ) as file:
             file.write(processed_iss)
     - name: Build installer
+      if: "${{ inputs.app-id != '' }}"
       shell: pwsh
       run: |
         cd ./love-actions-windows
@@ -365,7 +374,9 @@ runs:
       run: |
         7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/build/x86/*
         7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/build/x64/*
-        mv ./love-actions-windows/installer/${{ inputs.product-name }}_installer.exe ${{ inputs.output-folder }}
+        if [ '${{ inputs.app-id }}' != '' ]; then
+          mv ./love-actions-windows/installer/${{ inputs.product-name }}_installer.exe ${{ inputs.output-folder }}
+        fi
         echo "package-paths=$(ls -d ${{ inputs.output-folder }}/* | tr '\r\n' ' ')" >> $GITHUB_OUTPUT
     - name: Clean up
       shell: bash
