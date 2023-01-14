@@ -3,61 +3,73 @@ description: Windows CI/CD for LÖVE based games
 branding:
   icon: "heart"
   color: "blue"
+
 inputs:
   love-package:
     description: |
       Love package
       Would be used to assemble the executable
     required: true
+
   icon-path:
     description: |
       Path to the icon
       Would be used in building exe
       If not provided, the product will not have an icon
     required: false
+
   rc-path:
     description: |
       Path to the .rc file
       will be used to set the metadata of the exe
       If it is not provided, the compiled exe file will not have any metadata defined by the .rc file
     required: false
+
   extra-assets-x86:
     description: |
       List of folder & file paths to be added to x86 product folder
       No global quotation marks, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
+
   extra-assets-x64:
     description: |
       List of folder & file paths to be added to x64 product folder
       No global quotation marks, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
+
   product-name:
     description: |
       Base name of the package
       Would be used to rename products
     required: false
     default: "love_app"
+
   app-id:
     description: |
       The application identifier for the installer
       If not provided, the installer will not be build
     required: false
+
   project-website:
     description: |
       The project's homepage url
     required: false
+
   installer-languages:
     description: |
       List of languages supported by the installer
       No global quotation marks, separated by spaces
+    required: false
+
   output-folder:
     description: |
       Packages output folder
       All packages would be placed here
     required: false
     default: "./build"
+
 outputs:
   package-paths:
     description: |
@@ -65,6 +77,7 @@ outputs:
       Would be paths relative to repository root, separated by spaces
       Looks like: ./build/game.apk ./build/game.abb
     value: ${{ steps.gather-packages.outputs.package-paths }}
+
 runs:
   using: "composite"
   steps:
@@ -73,6 +86,7 @@ runs:
       run: |
         mkdir ./love-actions-windows/
         mkdir -p ${{ inputs.output-folder }}
+
     - name: Download and set dependencies
       env:
         TEMP_PATH: ./temp.zip
@@ -99,6 +113,7 @@ runs:
           # rm ./is.exe
           # It seems that this is because the silent installation will simply return after execution, resulting in a delete error
         }
+
     - name: Assemble product folders
       shell: pwsh
       run: |
@@ -151,22 +166,26 @@ runs:
 
         cmd /c copy /b .\build\x64\love.exe + .\game.love .\build\x64\${{ inputs.product-name }}.exe
         del .\build\x64\love.exe
+
     - name: Add extra assets for x86
       if: "${{ inputs.extra-assets-x86 != '' }}"
       shell: bash
       run: |
         cp -r -f ${{ inputs.extra-assets-x86 }} ./love-actions-windows/build/x86/
+
     - name: Add extra assets for x64
       if: "${{ inputs.extra-assets-x64 != '' }}"
       shell: bash
       run: |
         cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/build/x64/
+
     - name: Checkout issrc
       if: "${{ inputs.app-id != '' }}"
       uses: actions/checkout@v3
       with:
         path: ./love-actions-windows/issrc
         repository: jrsoftware/issrc
+
     - name: Processing language files
       if: "${{ inputs.app-id != '' }}"
       shell: bash
@@ -183,6 +202,7 @@ runs:
             cp ./love-actions-windows/issrc/Files/Languages/$item ./love-actions-windows/language
           fi
         done
+
     - name: Create iss file
       if: "${{ inputs.app-id != '' }}"
       shell: python3 {0}
@@ -367,12 +387,14 @@ runs:
             './love-actions-windows/${{ inputs.product-name }}.iss', 'w', encoding='UTF-8'
         ) as file:
             file.write(processed_iss)
+
     - name: Build installer
       if: "${{ inputs.app-id != '' }}"
       shell: pwsh
       run: |
         cd ./love-actions-windows
         iscc ./${{ inputs.product-name }}.iss
+
     - name: Gather packages in output folder
       id: gather-packages
       shell: bash
@@ -383,6 +405,7 @@ runs:
           mv ./love-actions-windows/installer/${{ inputs.product-name }}_installer.exe ${{ inputs.output-folder }}
         fi
         echo "package-paths=$(ls -d ${{ inputs.output-folder }}/* | tr '\r\n' ' ')" >> $GITHUB_OUTPUT
+
     - name: Clean up
       shell: bash
       run: |
