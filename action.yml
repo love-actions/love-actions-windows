@@ -3,55 +3,73 @@ description: Windows CI/CD for LÖVE based games
 branding:
   icon: "heart"
   color: "blue"
+
 inputs:
-  icon-path:
-    description: |
-      Path to the icon
-      Would be used in building appImage
-    required: false
-    default: "./icon.ico"
-  rc-path:
-    description: |
-      Path to the .rc file
-      Would be used to compile exe's resource file
-    required: true
   love-package:
     description: |
       Love package
       Would be used to assemble the executable
+    required: true
+
+  icon-path:
+    description: |
+      Path to the icon
+      Would be used in building exe
+      If not provided, the product will not have an icon
     required: false
-    default: "./game.love"
+
+  rc-path:
+    description: |
+      Path to the .rc file
+      will be used to set the metadata of the exe
+      If it is not provided, the compiled exe file will not have any metadata defined by the .rc file
+    required: false
+
   extra-assets-x86:
     description: |
       List of folder & file paths to be added to x86 product folder
-      Don't need global quotes, separated by spaces
+      No global quotation marks, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
+
   extra-assets-x64:
     description: |
       List of folder & file paths to be added to x64 product folder
-      Don't need global quotes, separated by spaces
+      No global quotation marks, separated by spaces
       Looks like: ./assets/ ./logics/ ./main.lua ./config.lua
     required: false
+
   product-name:
     description: |
       Base name of the package
       Would be used to rename products
     required: false
     default: "love_app"
-  version-string:
+
+  app-id:
     description: |
-      App version string
-      Use 3 numbers seperated by dots
-      Looks like 3.2.1
+      The application identifier for the installer
+      If not provided, the installer will not be build
     required: false
-    default: "11.4"
+
+  project-website:
+    description: |
+      The project's homepage url
+    required: false
+
+  installer-languages:
+    description: |
+      List of languages supported by the installer
+      No global quotation marks, separated by spaces
+    required: false
+
   output-folder:
     description: |
       Packages output folder
       All packages would be placed here
     required: false
     default: "./build"
+
 outputs:
   package-paths:
     description: |
@@ -59,93 +77,338 @@ outputs:
       Would be paths relative to repository root, separated by spaces
       Looks like: ./build/game.apk ./build/game.abb
     value: ${{ steps.gather-packages.outputs.package-paths }}
+
 runs:
   using: "composite"
   steps:
     - name: Create directories
       shell: bash
       run: |
-        mkdir -p ./love-actions-windows/
+        mkdir ./love-actions-windows/
         mkdir -p ${{ inputs.output-folder }}
-    - name: Download love and ResourceHacker
+
+    - name: Download and set dependencies
       env:
         TEMP_PATH: ./temp.zip
-      shell: bash
+      shell: pwsh
       run: |
         cd ./love-actions-windows/
 
         curl -L --retry 5 https://github.com/love2d/love/releases/download/11.4/love-11.4-win32.zip -o ${{ env.TEMP_PATH }}
-        7z x ${{ env.TEMP_PATH }} -o./
+        7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
 
         curl -L --retry 5 https://github.com/love2d/love/releases/download/11.4/love-11.4-win64.zip -o ${{ env.TEMP_PATH }}
-        7z x ${{ env.TEMP_PATH }} -o./
+        7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
 
         curl -L --retry 5 http://www.angusj.com/resourcehacker/resource_hacker.zip -o ${{ env.TEMP_PATH }}
-        7z x ${{ env.TEMP_PATH }} -o./
+        7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
-    - name: Update Windows template
-      shell: python3 {0}
-      run: |
-        version_string = "${{ inputs.version-string }}"
-        file_version = (f"{version_string.replace('.', ',')},0")
-        with open("${{ inputs.rc-path }}", "r", encoding="utf8") as file:
-          data = file.read()
-          data = data\
-            .replace("@Version", version_string)\
-            .replace("@FileVersion", file_version)
-        with open("./love-actions-windows/game.rc", "w+", encoding="utf8") as file:
-          file.write(data)
+
+        if("${{ inputs.app-id }}")
+        {
+          curl -L --retry 5 https://jrsoftware.org/download.php/is.exe -o is.exe
+          ./is.exe /verysilent
+          # rm ./is.exe
+          # It seems that this is because the silent installation will simply return after execution, resulting in a delete error
+        }
+
     - name: Assemble product folders
       shell: pwsh
       run: |
-        mv ${{ inputs.love-package }} ./love-actions-windows/game.love
-        cp ${{ inputs.icon-path }} ./love-actions-windows/icon.ico
-        
-        cd ./love-actions-windows/
+        cp ${{ inputs.love-package }} .\love-actions-windows\game.love
 
-        cmd /c '".\ResourceHacker.exe" -open ".\game.rc" -save ".\${{ inputs.product-name }}.res" -action compile'
+        cd .\love-actions-windows\
 
-        cmd /c copy /b .\love-11.4-win32\love.exe + .\game.love .\love-11.4-win32\${{ inputs.product-name }}.exe
-        del .\love-11.4-win32\love.exe
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action delete -mask ICONGROUP,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action delete -mask VERSIONINFO,,'
+
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action delete -mask ICONGROUP,,'
+        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action delete -mask VERSIONINFO,,'
+
+        if("${{ inputs.icon-path }}")
+        {
+          cd ..
+          cp ${{ inputs.icon-path }} .\love-actions-windows\icon.ico
+          cd .\love-actions-windows\
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
+        }
+
+        if("${{ inputs.rc-path }}")
+        {
+          cmd /c '".\ResourceHacker.exe" -open "${{ inputs.rc-path }}" -save ".\${{ inputs.product-name }}.res" -action compile'
+
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\love.exe" -save ".\love-11.4-win32\love.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+
+          cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\love.exe" -save ".\love-11.4-win64\love.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+        }
+
         del .\love-11.4-win32\lovec.exe
         del .\love-11.4-win32\game.ico
         del .\love-11.4-win32\love.ico
         del .\love-11.4-win32\changes.txt
         del .\love-11.4-win32\readme.txt
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win32\${{ inputs.product-name }}.exe" -save ".\love-11.4-win32\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
 
-        cmd /c copy /b .\love-11.4-win64\love.exe + .\game.love .\love-11.4-win64\${{ inputs.product-name }}.exe
-        del .\love-11.4-win64\love.exe
         del .\love-11.4-win64\lovec.exe
         del .\love-11.4-win64\game.ico
         del .\love-11.4-win64\love.ico
         del .\love-11.4-win64\changes.txt
         del .\love-11.4-win64\readme.txt
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action delete -mask ICONGROUP,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-11.4-win64\${{ inputs.product-name }}.exe" -save ".\love-11.4-win64\${{ inputs.product-name }}.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
+
+        mkdir -p .\build\x86
+        mkdir -p .\build\x64
+
+        cp .\love-11.4-win32\* .\build\x86\
+        cp .\love-11.4-win64\* .\build\x64\
+
+        cmd /c copy /b .\build\x86\love.exe + .\game.love .\build\x86\${{ inputs.product-name }}.exe
+        del .\build\x86\love.exe
+
+        cmd /c copy /b .\build\x64\love.exe + .\game.love .\build\x64\${{ inputs.product-name }}.exe
+        del .\build\x64\love.exe
+
     - name: Add extra assets for x86
       if: "${{ inputs.extra-assets-x86 != '' }}"
       shell: bash
       run: |
-        cp -r -f ${{ inputs.extra-assets-x86 }} ./love-actions-windows/love-11.4-win32/
+        cp -r -f ${{ inputs.extra-assets-x86 }} ./love-actions-windows/build/x86/
+
     - name: Add extra assets for x64
       if: "${{ inputs.extra-assets-x64 != '' }}"
       shell: bash
       run: |
-        cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/love-11.4-win64/
+        cp -r -f ${{ inputs.extra-assets-x64 }} ./love-actions-windows/build/x64/
+
+    - name: Checkout issrc
+      if: "${{ inputs.app-id != '' }}"
+      uses: actions/checkout@v3
+      with:
+        path: ./love-actions-windows/issrc
+        repository: jrsoftware/issrc
+
+    - name: Processing language files
+      if: "${{ inputs.app-id != '' }}"
+      shell: bash
+      run: |
+        mkdir -p ./love-actions-windows/language
+        languages="${{ inputs.installer-languages }}"
+        mv ./love-actions-windows/issrc/Files/Languages/Unofficial/* ./love-actions-windows/issrc/Files/Languages/
+        cp ./love-actions-windows/issrc/Files/Default.isl ./love-actions-windows/issrc/Files/Languages/English.isl
+        rm -rf ./love-actions-windows/issrc/Files/Languages/Unofficial
+        for item in $languages; do
+          if test -f $item; then
+            cp $item ./love-actions-windows/language
+          else
+            cp ./love-actions-windows/issrc/Files/Languages/$item ./love-actions-windows/language
+          fi
+        done
+
+    - name: Create iss file
+      if: "${{ inputs.app-id != '' }}"
+      shell: python3 {0}
+      run: |
+        import os
+        import re
+
+        rc_path = '${{ inputs.rc-path }}'
+        value_dict: dict = {}
+
+        if rc_path != '':
+            with open('${{ inputs.rc-path }}', 'r', encoding='UTF-8') as f:
+                content = f.read()
+                string_file_info = re.findall(
+                    r'BLOCK "StringFileInfo"[\s\S]*?}', content, re.IGNORECASE
+                )
+
+            value_dict = {}
+
+            for i in string_file_info:
+                value = dict(re.findall((r'VALUE "([\w ]+)", (.*)'), i, re.IGNORECASE))
+                value_dict.update(value)
+
+            for i, j in value_dict.items():
+                j = j.replace('"', '')
+                value_dict[i] = j
+
+        template_iss = r'''
+        #define AppName "@AppName"
+        #define AppWebsite "${{ inputs.project-website }}"
+
+        [Setup]
+        AppId=${{ inputs.app-id }}
+        AppName={#AppName}
+        AppVersion=@AppVersion
+        AppVerName={#AppName} @AppVersion
+        AppPublisher=@AppPublisher
+        AppCopyright=@Copyright
+        AppPublisherURL={#AppWebsite}
+        AppSupportURL={#AppWebsite}
+        AppUpdatesURL={#AppWebsite}
+        DefaultDirName={autopf}\{#AppName}
+        DefaultGroupName={#AppName}
+        AllowNoIcons=yes
+        LicenseFile=.\love-11.4-win64\license.txt
+        PrivilegesRequired=lowest
+        PrivilegesRequiredOverridesAllowed=dialog
+        OutputDir=.\installer
+        OutputBaseFilename={#AppName}_installer
+        @Icon
+        Compression=lzma
+        SolidCompression=yes
+        WizardStyle=modern
+        ArchitecturesInstallIn64BitMode=x64
+
+        [Languages]
+        @Languages
+
+        [Tasks]
+        Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+        [Files]
+        Source: ".\game.love"; DestDir: "{app}\Temp"
+
+        Source: ".\love-11.4-win64\love.exe"; DestDir: "{app}\Temp"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\license.txt"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\love.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\lua51.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\mpg123.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\msvcp120.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\msvcr120.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\OpenAL32.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+        Source: ".\love-11.4-win64\SDL2.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+
+        Source: ".\love-11.4-win32\love.exe"; DestDir: "{app}\Temp"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\license.txt"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\love.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\lua51.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\mpg123.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\msvcp120.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\msvcr120.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\OpenAL32.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+        Source: ".\love-11.4-win32\SDL2.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+
+        @ExtraAssets
+
+        [Icons]
+        Name: "{group}\{#AppName}"; Filename: "{app}\@ExeName"
+        Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
+        Name: "{autodesktop}\{#AppName}"; Filename: "{app}\@ExeName"; Tasks: desktopicon
+
+        [Run]
+        Filename: "{app}\@ExeName"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+        [Code]
+        procedure CurStepChanged(CurStep: TSetupStep);
+        var
+            InstallDir: string;
+            ResultCode: Integer;
+        begin
+            if CurStep = ssPostinstall then
+            begin
+                InstallDir := ExpandConstant('{app}');
+                Exec('cmd.exe', '/c copy /b .\love.exe + .\game.love ..\@ExeName', InstallDir + '\Temp', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+                Exec('cmd.exe', '/c rd /S /Q "' + InstallDir + '\Temp"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            end;
+        end;
+        '''
+
+        extra_assets_x86_list = r'${{ inputs.extra-assets-x86 }}/'.split()
+        extra_assets_x64_list = r'${{ inputs.extra-assets-x64 }}/'.split()
+        extra_assets = ''
+
+        for i in extra_assets_x86_list:
+            dest_dir = '{app}'
+            flag = ''
+            i = i.rstrip('/')
+            i = i.rstrip('\\')
+            i = os.path.abspath(i)
+            if os.path.isdir(i):
+                dir_name = os.path.basename(i)
+                dest_dir = f'{{app}}/{os.path.basename(i)}'
+                flag = '; Flags: recursesubdirs'
+            extra_assets += (
+                f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: not Is64BitInstallMode\n'
+            )
+
+        for i in extra_assets_x64_list:
+            dest_dir = '{app}'
+            flag = ''
+            i = i.rstrip('/')
+            i = i.rstrip('\\')
+            i = os.path.abspath(i)
+            if os.path.isdir(i):
+                dir_name = os.path.basename(i)
+                dest_dir = f'{{app}}/{os.path.basename(i)}'
+                flag = '; Flags: recursesubdirs'
+            extra_assets += (
+                f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: Is64BitInstallMode\n'
+            )
+
+        language_file_list = os.listdir('./love-actions-windows/language')
+        languages = ''
+        for i in language_file_list:
+            name = os.path.splitext(i)[0]
+            languages += f'Name: "{name}"; MessagesFile: ".\\language\\{i}"\n'
+
+        processed_iss = (
+            template_iss.replace(
+                '@AppName',
+                product_name := (
+                    value_dict['ProductName']
+                    if 'ProductName' in value_dict
+                    else r'${{ inputs.product-name }}'
+                ),
+            )
+            .replace(
+                '@AppVersion',
+                value_dict['ProductVersion']
+                if 'ProductVersion' in value_dict
+                else value_dict['FileVersion']
+                if 'FileVersion' in value_dict
+                else '0.0.0.0',
+            )
+            .replace(
+                '@AppPublisher',
+                value_dict['CompanyName'] if 'CompanyName' in value_dict else '',
+            )
+            .replace(
+                '@Copyright',
+                value_dict['LegalCopyright'] if 'LegalCopyright' in value_dict else '',
+            )
+            .replace('@ExeName', f'{product_name}.exe')
+            .replace('@ExtraAssets', extra_assets)
+            .replace('@Languages', languages)
+            .replace(
+                '@Icon', 'SetupIconFile=.\icon.ico' if r'${{ inputs.icon-path }}' != '' else ''
+            )
+        )
+
+        with open(
+            './love-actions-windows/${{ inputs.product-name }}.iss', 'w', encoding='UTF-8'
+        ) as file:
+            file.write(processed_iss)
+
+    - name: Build installer
+      if: "${{ inputs.app-id != '' }}"
+      shell: pwsh
+      run: |
+        cd ./love-actions-windows
+        iscc ./${{ inputs.product-name }}.iss
+
     - name: Gather packages in output folder
       id: gather-packages
       shell: bash
       run: |
-        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/love-11.4-win32/*
-        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/love-11.4-win64/*
+        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x86.zip ./love-actions-windows/build/x86/*
+        7z a -tzip ${{ inputs.output-folder }}/${{ inputs.product-name }}_x64.zip ./love-actions-windows/build/x64/*
+        if [ '${{ inputs.app-id }}' != '' ]; then
+          mv ./love-actions-windows/installer/${{ inputs.product-name }}_installer.exe ${{ inputs.output-folder }}
+        fi
         echo "package-paths=$(ls -d ${{ inputs.output-folder }}/* | tr '\r\n' ' ')" >> $GITHUB_OUTPUT
-    - name: Cleanup
+
+    - name: Clean up
       shell: bash
       run: |
         rm -rf ./love-actions-windows/
