@@ -33,7 +33,7 @@ See related actions below:
     icon-path: ./assets/windows/icon.ico
     rc-path: ./assets/windows/template.rc
     product-name: love_app
-    app-id: com.example.app
+    app-id: ${{ secrets.APP_ID }}
     product-website: https://www.example.com
     installer-languages: English.isl ChineseSimplified.isl
     output-folder: "./dist"
@@ -141,9 +141,9 @@ jobs:
 | `extra-assets-x86`    | `false` | `N/A`         | List of folder & file paths to be added to x86 product folder.                                  |
 | `extra-assets-x64`    | `false` | `N/A`         | List of folder & file paths to be added to x64 product folder.                                  |
 | `product-name`        | `false` | `"love_app"`  | Base name of the package.                                                                       |
-| `app-id`              | `false` | `N/A`         | The application identifier for the installer. If not provided, the installer will not be build. |
+| `app-id`              | `false` | `N/A`         | The application identifier for the installer.<br>This should be a uuid, you need to download inno setup and use the built-in tool to generate one.<br>If not provided, the installer will not be build. |
 | `project-website`     | `false` | `N/A`         | The project's homepage url.                                                                     |
-| `installer-languages` | `false` | `English.isl` | List of languages supported by the installer.                                                   |
+| `installer-languages` | `false` | `English.isl` | List of languages supported by the installer.<br>For officially supported and unofficially supported languages, please use the filenames, for example:<br>`English.isl ChineseSimplified.isl`<br>(you can find it [here](https://jrsoftware.org/files/istrans/))<br>For custom languages, please provide the path, for example: <br>`./my_language.isl`                                                  |
 | `output-folder`       | `false` | `"./build"`   | Packages output folder. All packages would be placed here.                                      |
 
 ## All outputs
