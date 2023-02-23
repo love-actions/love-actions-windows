@@ -314,8 +314,8 @@ runs:
         end;
         '''
 
-        extra_assets_x86_list = r'${{ inputs.extra-assets-x86 }}/'.split()
-        extra_assets_x64_list = r'${{ inputs.extra-assets-x64 }}/'.split()
+        extra_assets_x86_list = r'${{ inputs.extra-assets-x86 }}'.split()
+        extra_assets_x64_list = r'${{ inputs.extra-assets-x64 }}'.split()
         extra_assets = ''
 
         for i in extra_assets_x86_list:
