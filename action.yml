@@ -253,7 +253,7 @@ runs:
         PrivilegesRequired=lowest
         PrivilegesRequiredOverridesAllowed=dialog
         OutputDir=.\installer
-        OutputBaseFilename={#AppName}_installer
+        OutputBaseFilename=@OutName
         @Icon
         Compression=lzma
         SolidCompression=yes
@@ -383,6 +383,7 @@ runs:
             .replace(
                 '@Icon', 'SetupIconFile=.\icon.ico' if r'${{ inputs.icon-path }}' != '' else ''
             )
+            .replace('@OutName', '${{ inputs.product-name }}_installer')
         )
 
         with open(
