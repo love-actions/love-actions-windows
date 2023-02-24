@@ -308,7 +308,7 @@ runs:
             if CurStep = ssPostinstall then
             begin
                 InstallDir := ExpandConstant('{app}');
-                Exec('cmd.exe', '/c copy /b .\love.exe + .\game.love ..\@ExeName', InstallDir + '\Temp', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+                Exec('cmd.exe', '/c copy /b .\love.exe + .\game.love "..\@ExeName"', InstallDir + '\Temp', SW_HIDE, ewWaitUntilTerminated, ResultCode);
                 Exec('cmd.exe', '/c rd /S /Q "' + InstallDir + '\Temp"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
             end;
         end;
