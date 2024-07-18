@@ -255,7 +255,7 @@ runs:
         OutputDir=.\installer
         OutputBaseFilename=@OutName
         @Icon
-        Compression=bzip2
+        Compression=zip
         SolidCompression=no
         WizardStyle=modern
         ArchitecturesInstallIn64BitMode=x64
