@@ -183,7 +183,7 @@ runs:
 
     - name: Checkout issrc
       if: "${{ inputs.app-id != '' }}"
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: ./love-actions-windows/issrc
         repository: jrsoftware/issrc
@@ -255,8 +255,8 @@ runs:
         OutputDir=.\installer
         OutputBaseFilename=@OutName
         @Icon
-        Compression=lzma
-        SolidCompression=yes
+        Compression=bzip2
+        SolidCompression=no
         WizardStyle=modern
         ArchitecturesInstallIn64BitMode=x64
 
