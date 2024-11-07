@@ -1,5 +1,11 @@
 # love-actions-windows
 
+## Notice
+
+### This branch is for the `11.4` version of the [LÖVE](https://love2d.org/) framework.
+
+### For the latest release version, please refer to the [**main**](https://github.com/love-actions/love-actions-windows) branch.
+
 ## About
 
 Github Action for building & deploying Windows `.zip` packages and `.exe` installer of a [LÖVE](https://love2d.org/) framework based game.
