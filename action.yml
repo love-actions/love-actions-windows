@@ -208,11 +208,11 @@ runs:
         import os
         import re
 
-        rc_path = '${{ inputs.rc-path }}'
+        rc_path = "${{ inputs.rc-path }}"
         value_dict: dict = {}
 
-        if rc_path != '':
-            with open('${{ inputs.rc-path }}', 'r', encoding='UTF-8') as f:
+        if rc_path != "":
+            with open("${{ inputs.rc-path }}", "r", encoding="UTF-8") as f:
                 content = f.read()
                 string_file_info = re.findall(
                     r'BLOCK "StringFileInfo"[\s\S]*?}', content, re.IGNORECASE
@@ -225,10 +225,10 @@ runs:
                 value_dict.update(value)
 
             for i, j in value_dict.items():
-                j = j.replace('"', '')
+                j = j.replace('"', "")
                 value_dict[i] = j
 
-        template_iss = r'''
+        template_iss = r"""
         #define AppName "@AppName"
         #define AppWebsite "${{ inputs.project-website }}"
 
@@ -308,82 +308,88 @@ runs:
                 Exec('cmd.exe', '/c rd /S /Q "' + InstallDir + '\Temp"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
             end;
         end;
-        '''
+        """
 
-        extra_assets_x86_list = r'${{ inputs.extra-assets-x86 }}'.split()
-        extra_assets_x64_list = r'${{ inputs.extra-assets-x64 }}'.split()
-        extra_assets = ''
+        extra_assets_x86_list = r"${{ inputs.extra-assets-x86 }}".split()
+        extra_assets_x64_list = r"${{ inputs.extra-assets-x64 }}".split()
+        extra_assets = ""
 
         for i in extra_assets_x86_list:
-            dest_dir = '{app}'
-            flag = ''
-            i = i.rstrip('/')
-            i = i.rstrip('\\')
+            dest_dir = "{app}"
+            flag = ""
+            i = i.rstrip("/")
+            i = i.rstrip("\\")
             i = os.path.abspath(i)
             if os.path.isdir(i):
                 dir_name = os.path.basename(i)
-                dest_dir = f'{{app}}/{os.path.basename(i)}'
-                flag = '; Flags: recursesubdirs'
+                dest_dir = f"{{app}}/{os.path.basename(i)}"
+                flag = "; Flags: recursesubdirs"
             extra_assets += (
                 f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: not Is64BitInstallMode\n'
             )
 
         for i in extra_assets_x64_list:
-            dest_dir = '{app}'
-            flag = ''
-            i = i.rstrip('/')
-            i = i.rstrip('\\')
+            dest_dir = "{app}"
+            flag = ""
+            i = i.rstrip("/")
+            i = i.rstrip("\\")
             i = os.path.abspath(i)
             if os.path.isdir(i):
                 dir_name = os.path.basename(i)
-                dest_dir = f'{{app}}/{os.path.basename(i)}'
-                flag = '; Flags: recursesubdirs'
+                dest_dir = f"{{app}}/{os.path.basename(i)}"
+                flag = "; Flags: recursesubdirs"
             extra_assets += (
                 f'Source: "{i}"; DestDir: "{dest_dir}"{flag}; Check: Is64BitInstallMode\n'
             )
 
-        language_file_list = os.listdir('${{ inputs.love-actions-folder }}/language')
-        languages = ''
+        language_file_list = os.listdir("${{ inputs.love-actions-folder }}/language")
+        languages = ""
         for i in language_file_list:
             name = os.path.splitext(i)[0]
             languages += f'Name: "{name}"; MessagesFile: ".\\language\\{i}"\n'
 
         processed_iss = (
             template_iss.replace(
-                '@AppName',
+                "@AppName",
                 product_name := (
-                    value_dict['ProductName']
-                    if 'ProductName' in value_dict
-                    else r'${{ inputs.product-name }}'
+                    value_dict["ProductName"]
+                    if "ProductName" in value_dict
+                    else r"${{ inputs.product-name }}"
                 ),
             )
             .replace(
-                '@AppVersion',
-                value_dict['ProductVersion']
-                if 'ProductVersion' in value_dict
-                else value_dict['FileVersion']
-                if 'FileVersion' in value_dict
-                else '0.0.0.0',
+                "@AppVersion",
+                value_dict["ProductVersion"]
+                if "ProductVersion" in value_dict
+                else value_dict["FileVersion"]
+                if "FileVersion" in value_dict
+                else "0.0.0.0",
             )
             .replace(
-                '@AppPublisher',
-                value_dict['CompanyName'] if 'CompanyName' in value_dict else '',
+                "@AppPublisher",
+                value_dict["CompanyName"] if "CompanyName" in value_dict else "",
             )
             .replace(
-                '@Copyright',
-                value_dict['LegalCopyright'] if 'LegalCopyright' in value_dict else '',
+                "@Copyright",
+                value_dict["LegalCopyright"] if "LegalCopyright" in value_dict else "",
             )
-            .replace('@ExeName', f'{product_name}.exe')
-            .replace('@ExtraAssets', extra_assets)
-            .replace('@Languages', languages)
+            .replace("@ExeName", f"{product_name}.exe")
+            .replace("@ExtraAssets", extra_assets)
+            .replace("@Languages", languages)
             .replace(
-                '@Icon', 'SetupIconFile=.\icon.ico' if r'${{ inputs.icon-path }}' != '' else ''
+                "@Icon",
+                r"""SetupIconFile=.\icon.ico
+        UninstallDisplayIcon=.\icon.ico"""
+                if r"${{ inputs.icon-path }}" != ""
+                else "",
             )
-            .replace('@OutName', '${{ inputs.product-name }}_installer')
+            .replace("@OutName", "${{ inputs.product-name }}_installer")
         )
 
         with open(
-            '${{ inputs.love-actions-folder }}/${{ inputs.product-name }}.iss', 'w', encoding='UTF-8'
+            "${{ inputs.love-actions-folder }}/${{ inputs.product-name }}.iss",
+            "w",
+            encoding="UTF-8",
         ) as file:
             file.write(processed_iss)
     - name: Build installer
