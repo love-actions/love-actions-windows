@@ -12,16 +12,6 @@ See related actions below:
 
 [Love actions for testing](https://github.com/marketplace/actions/love-actions-for-testing)
 
-[Love actions for android](https://github.com/marketplace/actions/love-actions-for-android)
-
-[Love actions for iOS](https://github.com/marketplace/actions/love-actions-for-ios)
-
-[Love actions for Linux](https://github.com/marketplace/actions/love-actions-for-linux)
-
-[Love actions for macOS portable](https://github.com/marketplace/actions/love-actions-for-macos-portable)
-
-[Love actions for macOS AppStore](https://github.com/marketplace/actions/love-actions-for-macos-appstore)
-
 ## Quick example
 
 ```yaml
@@ -55,7 +45,7 @@ jobs:
     env:
       OUTPUT_FOLDER: ./build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Build core love package
@@ -64,7 +54,7 @@ jobs:
           build-list: ./media/ ./parts/ ./Zframework/ ./conf.lua ./main.lua ./version.lua
           package-path: ${{ env.CORE_LOVE_PACKAGE_PATH }}
       - name: Upload core love package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.CORE_LOVE_ARTIFACT_NAME }}
           path: ${{ env.CORE_LOVE_PACKAGE_PATH }}
@@ -72,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-core
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Love actions for testing
@@ -86,12 +76,12 @@ jobs:
     env:
       OUTPUT_FOLDER: ./build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       # Download your core love package here
       - name: Download core love package
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.CORE_LOVE_ARTIFACT_NAME }}
       # This is an example dynamic library
@@ -115,17 +105,17 @@ jobs:
           installer-languages: English.isl ChineseSimplified.isl Japanese.isl French.isl
           output-folder: ${{ env.OUTPUT_FOLDER }}
       - name: Upload 32-bit artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ needs.get-info.outputs.base-name }}_Windows_x86
           path: ${{ env.OUTPUT_FOLDER }}/${{ env.PRODUCT_NAME }}_x86.zip
       - name: Upload 64-bit artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ needs.get-info.outputs.base-name }}_Windows_x64
           path: ${{ env.OUTPUT_FOLDER }}/${{ env.PRODUCT_NAME }}_x64.zip
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ needs.get-info.outputs.base-name }}_Windows_installer
           path: ${{ env.OUTPUT_FOLDER }}/${{ env.PRODUCT_NAME }}_installer.exe
@@ -133,21 +123,37 @@ jobs:
 
 ## All inputs
 
-| Name                    | Required  | Default         | Description                                                                                     |
-| ----------------------- | --------- | --------------- | ----------------------------------------------------------------------------------------------- |
-| `love-package`        | `true`  | `N/A`         | Love package. Used to assemble the executable.                                                  |
-| `icon-path`           | `false` | `N/A`         | Path to the exe's icon. If not specified, the product has no icon.                              |
-| `rc-path`             | `false` | `N/A`         | Path to the `.rc` file. Used to configure the properties of the product.                      |
-| `extra-assets-x86`    | `false` | `N/A`         | List of folder & file paths to be added to x86 product folder.                                  |
-| `extra-assets-x64`    | `false` | `N/A`         | List of folder & file paths to be added to x64 product folder.                                  |
-| `product-name`        | `false` | `"love_app"`  | Base name of the package.                                                                       |
-| `app-id`              | `false` | `N/A`         | The application identifier for the installer.<br>This should be a uuid, you need to download inno setup and use the built-in tool to generate one.<br>If not provided, the installer will not be build. |
-| `project-website`     | `false` | `N/A`         | The project's homepage url.                                                                     |
-| `installer-languages` | `false` | `English.isl` | List of languages supported by the installer.<br>For officially supported and unofficially supported languages, please use the filenames, for example:<br>`English.isl ChineseSimplified.isl`<br>(you can find it [here](https://jrsoftware.org/files/istrans/))<br>For custom languages, please provide the path, for example: <br>`./my_language.isl`                                                  |
-| `output-folder`       | `false` | `"./build"`   | Packages output folder. All packages would be placed here.                                      |
+| Name                  | Required | Default                  | Description                                                                                                                     |
+| --------------------- | -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `love-ref`            | `false`  | `"11.4"`                 | `love` release ref. Could only be release tags like `11.4`                                                                      |
+| `love-package`        | `false`  | `"./game.love"`          | Love package. Used to assemble the executable.                                                                                  |
+| `icon-path`           | `false`  | `""`                     | Path to the exe's icon. If not specified, the product has no icon.                                                              |
+| `rc-path`             | `false`  | `""`                     | Path to the `.rc` file. Used to configure the properties of the product.                                                        |
+| `extra-assets-x86`    | `false`  | `""`                     | List of folder & file paths to be added to x86 product folder.                                                                  |
+| `extra-assets-x64`    | `false`  | `""`                     | List of folder & file paths to be added to x64 product folder.                                                                  |
+| `product-name`        | `false`  | `"love_app"`             | Base name of the package.                                                                                                       |
+| `app-id`              | `false`  | `""`                     | The application identifier (uuid) for the installer. You need to download inno setup and use the built-in tool to generate one. |
+| `project-website`     | `false`  | `""`                     | The project's homepage url.                                                                                                     |
+| `installer-languages` | `false`  | `English.isl`            | List of languages supported by the installer. You can find references [here](https://jrsoftware.org/files/istrans/)             |
+| `output-folder`       | `false`  | `"./build"`              | Packages output folder. All packages would be placed here.                                                                      |
+| `love-actions-folder` | `false`  | `"love-actions-windows"` | Path to the `love-actions-windows` folder. Would be used to run all the action steps                                            |
 
 ## All outputs
 
-| Name              | Example                                                                              | Description                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Name            | Example                                                                            | Description                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `package-paths` | `./build/love_app_x86.zip ./build/love_app_x64.zip ./build/love_app_installer.exe` | Built packages' paths in a bash-style list relative to the repository root, separated by spaces. |
+
+## Other platforms
+
+If you need to build game for other platforms, please check links below:
+
+[Love actions for android](https://github.com/marketplace/actions/love-actions-for-android)
+
+[Love actions for iOS](https://github.com/marketplace/actions/love-actions-for-ios)
+
+[Love actions for Linux](https://github.com/marketplace/actions/love-actions-for-linux)
+
+[Love actions for macOS portable](https://github.com/marketplace/actions/love-actions-for-macos-portable)
+
+[Love actions for macOS AppStore](https://github.com/marketplace/actions/love-actions-for-macos-appstore)
