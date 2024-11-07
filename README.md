@@ -1,5 +1,16 @@
 # love-actions-windows
 
+## Which version to use?
+
+- For the `11.5` version of the [LÖVE](https://love2d.org/) framework, use the `v2` tag or `v2.x.x` tags.
+- For the `11.4` version of the [LÖVE](https://love2d.org/) framework, use the `v1` tag or `v1.x.x` tags.
+
+### Branches
+
+This branch is for the latest release version of the [LÖVE](https://love2d.org/) framework.
+
+For the `11.4` version, please refer to the [**11.4**](https://github.com/love-actions/love-actions-windows/tree/11.4) branch.
+
 ## About
 
 Github Action for building & deploying Windows `.zip` packages and `.exe` installer of a [LÖVE](https://love2d.org/) framework based game.
@@ -125,7 +136,7 @@ jobs:
 
 | Name                  | Required | Default                  | Description                                                                                                                     |
 | --------------------- | -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `love-ref`            | `false`  | `"11.4"`                 | `love` release ref. Could only be release tags like `11.4`                                                                      |
+| `love-ref`            | `false`  | `"11.5"`                 | `love` release ref. Could only be release tags like `11.5`                                                                      |
 | `love-package`        | `false`  | `"./game.love"`          | Love package. Used to assemble the executable.                                                                                  |
 | `icon-path`           | `false`  | `""`                     | Path to the exe's icon. If not specified, the product has no icon.                                                              |
 | `rc-path`             | `false`  | `""`                     | Path to the `.rc` file. Used to configure the properties of the product.                                                        |
