@@ -251,6 +251,7 @@ runs:
         OutputDir=.\installer
         OutputBaseFilename=@OutName
         @Icon
+        UninstallDisplayIcon={app}\{#AppName}.exe
         Compression=zip
         SolidCompression=no
         WizardStyle=modern
@@ -378,8 +379,7 @@ runs:
             .replace("@Languages", languages)
             .replace(
                 "@Icon",
-                r"""SetupIconFile=.\icon.ico
-        UninstallDisplayIcon=.\icon.ico"""
+                r"SetupIconFile=.\icon.ico"
                 if r"${{ inputs.icon-path }}" != ""
                 else "",
             )
