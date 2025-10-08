@@ -396,7 +396,7 @@ runs:
       if: "${{ inputs.app-id != '' }}"
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
       with:
-        # options: /O"${{github.workspace}}/${{ inputs.love-actions-folder }}"
+        options: /Qp
         path: ${{ inputs.love-actions-folder }}/${{ inputs.product-name }}.iss
     - name: Gather packages in output folder
       id: gather-packages
