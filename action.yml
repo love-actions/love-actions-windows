@@ -388,10 +388,10 @@ runs:
             file.write(processed_iss)
     - name: Build installer
       if: "${{ inputs.app-id != '' }}"
-      shell: pwsh
-      run: |
-        cd ${{ inputs.love-actions-folder }}
-        iscc ./${{ inputs.product-name }}.iss
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+      with:
+        options: /Qp
+        path: ${{ inputs.love-actions-folder }}/${{ inputs.product-name }}.iss
     - name: Gather packages in output folder
       id: gather-packages
       shell: bash
