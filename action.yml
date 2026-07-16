@@ -181,7 +181,7 @@ runs:
         cp -r -f ${{ inputs.extra-assets-x64 }} ${{ inputs.love-actions-folder }}/build/x64/
     - name: Checkout issrc
       if: "${{ inputs.app-id != '' }}"
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         path: ${{ inputs.love-actions-folder }}/issrc
         repository: jrsoftware/issrc
@@ -394,7 +394,7 @@ runs:
             file.write(processed_iss)
     - name: Build installer
       if: "${{ inputs.app-id != '' }}"
-      uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.9
       with:
         options: /Qp
         path: ${{ inputs.love-actions-folder }}/${{ inputs.product-name }}.iss
