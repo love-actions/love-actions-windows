@@ -108,13 +108,6 @@ runs:
         7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
 
-        if("${{ inputs.app-id }}")
-        {
-          curl -L --retry 5 https://jrsoftware.org/download.php/is.exe -o is.exe
-          ./is.exe /verysilent
-          # rm ./is.exe
-          # It seems that this is because the silent installation will simply return after execution, resulting in a delete error
-        }
     - name: Assemble product folders
       shell: pwsh
       run: |
