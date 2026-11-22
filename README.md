@@ -15,6 +15,12 @@ For the `11.4` version, please refer to the [**11.4**](https://github.com/love-a
 
 Github Action for building & deploying Windows `.zip` packages and `.exe` installer of a [LÖVE](https://love2d.org/) framework based game.
 
+Use a Windows runner with Python 3 and the Windows SDK (`rc.exe`).
+The action compiles the supplied icon and `VERSIONINFO 1` template with
+the SDK, then updates only the icon and version resources in each native
+LÖVE executable before appending the game. No Resource Hacker download
+is required.
+
 ### Related actions
 
 See related actions below:

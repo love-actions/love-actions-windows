@@ -103,41 +103,21 @@ runs:
         7z x ${{ env.TEMP_PATH }} -o'./'
         rm ${{ env.TEMP_PATH }}
         mv love-${{ inputs.love-ref }}-win64 love-win64
-
-        curl -L --retry 5 http://www.angusj.com/resourcehacker/resource_hacker.zip -o ${{ env.TEMP_PATH }}
-        7z x ${{ env.TEMP_PATH }} -o'./'
-        rm ${{ env.TEMP_PATH }}
-
     - name: Assemble product folders
       shell: pwsh
+      env:
+        LOVE_ICON_PATH: ${{ inputs.icon-path }}
+        LOVE_RC_PATH: ${{ inputs.rc-path }}
+        RESOURCE_SCRIPT: ${{ github.action_path }}/update_resources.py
       run: |
         cp ${{ inputs.love-package }} .\love-actions-windows\game.love
+        if ($env:LOVE_ICON_PATH) {
+          Copy-Item -LiteralPath $env:LOVE_ICON_PATH -Destination .\love-actions-windows\icon.ico
+        }
+        python3 $env:RESOURCE_SCRIPT .\love-actions-windows\love-win32\love.exe .\love-actions-windows\love-win64\love.exe
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
         cd .\love-actions-windows\
-
-        cmd /c '".\ResourceHacker.exe" -open ".\love-win32\love.exe" -save ".\love-win32\love.exe" -action delete -mask ICONGROUP,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-win32\love.exe" -save ".\love-win32\love.exe" -action delete -mask VERSIONINFO,,'
-
-        cmd /c '".\ResourceHacker.exe" -open ".\love-win64\love.exe" -save ".\love-win64\love.exe" -action delete -mask ICONGROUP,,'
-        cmd /c '".\ResourceHacker.exe" -open ".\love-win64\love.exe" -save ".\love-win64\love.exe" -action delete -mask VERSIONINFO,,'
-
-        if("${{ inputs.icon-path }}")
-        {
-          cd ..
-          cp ${{ inputs.icon-path }} .\love-actions-windows\icon.ico
-          cd .\love-actions-windows\
-          cmd /c '".\ResourceHacker.exe" -open ".\love-win32\love.exe" -save ".\love-win32\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
-          cmd /c '".\ResourceHacker.exe" -open ".\love-win64\love.exe" -save ".\love-win64\love.exe" -action addoverwrite -res ".\icon.ico" -mask ICONGROUP,1,'
-        }
-
-        if("${{ inputs.rc-path }}")
-        {
-          cmd /c '".\ResourceHacker.exe" -open "${{ inputs.rc-path }}" -save ".\${{ inputs.product-name }}.res" -action compile'
-
-          cmd /c '".\ResourceHacker.exe" -open ".\love-win32\love.exe" -save ".\love-win32\love.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
-
-          cmd /c '".\ResourceHacker.exe" -open ".\love-win64\love.exe" -save ".\love-win64\love.exe" -action addoverwrite -res ".\${{ inputs.product-name }}.res" -mask VERSIONINFO,1,'
-        }
 
         del .\love-win32\lovec.exe
         del .\love-win32\game.ico
