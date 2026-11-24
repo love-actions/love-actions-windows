@@ -37,15 +37,36 @@ def resource_entries(path):
 
 
 def sdk_resource_compiler():
-    program_files_x86 = os.environ.get('ProgramFiles(x86)')
-    if not program_files_x86:
-        raise FileNotFoundError('ProgramFiles(x86) is not set; Windows SDK rc.exe cannot be located')
-    sdk = Path(program_files_x86) / 'Windows Kits' / '10' / 'bin'
-    # Search only the installed SDK tree; never trust the current directory or PATH.
-    candidates = [item for item in sdk.glob('10.*/x64/rc.exe') if item.is_file()]
+    if os.name != 'nt':
+        raise FileNotFoundError('Windows SDK rc.exe can only be located on Windows')
+    import winreg
+
+    access = winreg.KEY_READ | getattr(winreg, 'KEY_WOW64_64KEY', 0)
+    try:
+        with winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE,
+            r'SOFTWARE\Microsoft\Windows Kits\Installed Roots',
+            0,
+            access,
+        ) as key:
+            installed_root, _ = winreg.QueryValueEx(key, 'KitsRoot10')
+    except OSError as exc:
+        raise FileNotFoundError('Windows SDK root is not registered') from exc
+
+    sdk = (Path(installed_root) / 'bin').resolve(strict=True)
+    candidates = []
+    for item in sdk.glob('10.*/x64/rc.exe'):
+        try:
+            resolved = item.resolve(strict=True)
+            resolved.relative_to(sdk)
+            version = tuple(map(int, item.parent.parent.name.split('.')))
+        except (OSError, ValueError):
+            continue
+        if resolved.is_file():
+            candidates.append((version, resolved))
     if not candidates:
         raise FileNotFoundError(f'Windows SDK rc.exe not found under {sdk}')
-    return max(candidates, key=lambda item: tuple(map(int, item.parent.parent.name.split('.'))))
+    return max(candidates, key=lambda candidate: candidate[0])[1]
 
 
 def compile_resources(icon, version):
