@@ -5,7 +5,6 @@ from ctypes import wintypes as win
 from itertools import chain
 import os
 from pathlib import Path
-import shutil
 import struct
 import subprocess
 import sys
@@ -38,11 +37,12 @@ def resource_entries(path):
 
 
 def sdk_resource_compiler():
-    compiler = shutil.which('rc.exe')
-    if compiler:
-        return Path(compiler)
-    sdk = Path(os.environ['ProgramFiles(x86)']) / 'Windows Kits' / '10' / 'bin'
-    candidates = list(sdk.glob('10.*/x64/rc.exe'))
+    program_files_x86 = os.environ.get('ProgramFiles(x86)')
+    if not program_files_x86:
+        raise FileNotFoundError('ProgramFiles(x86) is not set; Windows SDK rc.exe cannot be located')
+    sdk = Path(program_files_x86) / 'Windows Kits' / '10' / 'bin'
+    # Search only the installed SDK tree; never trust the current directory or PATH.
+    candidates = [item for item in sdk.glob('10.*/x64/rc.exe') if item.is_file()]
     if not candidates:
         raise FileNotFoundError(f'Windows SDK rc.exe not found under {sdk}')
     return max(candidates, key=lambda item: tuple(map(int, item.parent.parent.name.split('.'))))
